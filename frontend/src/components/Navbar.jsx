@@ -17,13 +17,16 @@ function Navbar() {
       </Link>
 
       <div className="flex gap-8">
-        <Link to="/listings" className="text-gray-600 hover:text-blue-600 font-medium">
-          Browse Tickets
-        </Link>
-        <Link to="/sell" className="text-gray-600 hover:text-blue-600 font-medium">
-          Sell a Ticket
-        </Link>
-      </div>
+  <Link to="/listings" className="text-gray-600 hover:text-blue-600 font-medium">
+    Browse Tickets
+  </Link>
+  <Link to="/sell" className="text-gray-600 hover:text-blue-600 font-medium">
+    Sell a Ticket
+  </Link>
+  <Link to="/analytics" className="text-gray-600 hover:text-blue-600 font-medium">
+    Analytics
+  </Link>
+</div>
 
       <div className="flex gap-3 items-center">
         {user ? (

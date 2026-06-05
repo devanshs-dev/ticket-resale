@@ -7,6 +7,7 @@ import Listings from './pages/Listings'
 import TicketDetail from './pages/TicketDetail'
 import Sell from './pages/Sell'
 import Dashboard from './pages/Dashboard'
+import Analytics from './pages/Analytics'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/ticket/:id" element={<TicketDetail />} />
         <Route path="/sell" element={<Sell />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/analytics" element={<Analytics />} />
       </Routes>
     </BrowserRouter>
   )

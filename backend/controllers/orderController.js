@@ -1,3 +1,4 @@
+const QRCode = require('qrcode')
 const Order = require('../models/Order')
 const Ticket = require('../models/Ticket')
 const pool = require('../config/pgdb')
@@ -21,6 +22,16 @@ const buyTicket = async (req, res) => {
       price: ticket.price,
     })
 
+    const qrData = JSON.stringify({
+      orderId: order._id,
+      ticketId: ticket._id,
+      ticketTitle: ticket.title,
+      buyerId: req.user._id,
+      price: ticket.price,
+      verified: true
+    })
+    const qrCode = await QRCode.toDataURL(qrData)
+
     await pool.query(
       `INSERT INTO orders (ticket_id, ticket_title, buyer_id, buyer_name, seller_id, seller_name, category, price)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -36,7 +47,7 @@ const buyTicket = async (req, res) => {
       ]
     )
 
-    res.status(201).json(order)
+    res.status(201).json({ ...order.toObject(), qrCode })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

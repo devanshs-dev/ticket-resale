@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import API from '../api'
 
@@ -13,6 +13,10 @@ function TicketDetail() {
   const [ticket, setTicket] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [qrCode, setQrCode] = useState(null)
+  const [purchased, setPurchased] = useState(false)
+  const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem('user'))
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -26,6 +30,20 @@ function TicketDetail() {
     }
     fetchTicket()
   }, [id])
+
+  const handleBuy = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    try {
+      const { data } = await API.post('/orders/buy/' + id)
+      setQrCode(data.qrCode)
+      setPurchased(true)
+    } catch (err) {
+      alert(err.response?.data?.message || 'Something went wrong')
+    }
+  }
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -96,9 +114,28 @@ function TicketDetail() {
               </div>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700">
-              Buy Now — Rs {ticket.price}
-            </button>
+            {purchased && qrCode ? (
+              <div className="text-center">
+                <div className="bg-green-50 text-green-600 px-4 py-3 rounded-xl mb-6 font-medium">
+                  Ticket purchased successfully!
+                </div>
+                <p className="text-gray-500 mb-4 font-medium">Your QR Code — show this at entry</p>
+                <img src={qrCode} alt="QR Code" className="mx-auto w-48 h-48" />
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full mt-6 bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700"
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleBuy}
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700"
+              >
+                Buy Now — Rs {ticket.price}
+              </button>
+            )}
           </div>
         </div>
       </div>
