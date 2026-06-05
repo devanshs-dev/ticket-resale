@@ -6,6 +6,7 @@ import Signup from './pages/Signup'
 import Listings from './pages/Listings'
 import TicketDetail from './pages/TicketDetail'
 import Sell from './pages/Sell'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/listings" element={<Listings />} />
         <Route path="/ticket/:id" element={<TicketDetail />} />
         <Route path="/sell" element={<Sell />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   )

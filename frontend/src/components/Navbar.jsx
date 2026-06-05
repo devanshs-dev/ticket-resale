@@ -27,15 +27,17 @@ function Navbar() {
 
       <div className="flex gap-3 items-center">
         {user ? (
-          <>
-            <span className="text-gray-600 font-medium">Hi, {user.name}</span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-red-500 border border-red-400 rounded-lg hover:bg-red-50 font-medium"
-            >
-              Logout
-            </button>
-          </>
+  <>
+    <Link to="/dashboard" className="text-gray-600 hover:text-blue-600 font-medium">
+      {user.name}
+    </Link>
+    <button
+      onClick={handleLogout}
+      className="px-4 py-2 text-red-500 border border-red-400 rounded-lg hover:bg-red-50 font-medium"
+    >
+      Logout
+    </button>
+  </>
         ) : (
           <>
             <Link to="/login" className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 font-medium">
