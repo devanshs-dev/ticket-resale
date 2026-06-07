@@ -1,12 +1,31 @@
 const Ticket = require('../models/Ticket')
+const axios = require('axios')
+
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001'
 
 const createTicket = async (req, res) => {
   try {
     const { title, category, date, location, price, seats, description } = req.body
+
+    // Call ML service for trust score
+    let trustScore = 100
+    try {
+      const mlRes = await axios.post(ML_SERVICE_URL + '/predict', {
+        category, price, description, seats,
+        account_age_days: 30
+      })
+      trustScore = mlRes.data.trust_score
+    } catch (mlErr) {
+      console.log('ML service unavailable, using default score')
+    }
+
     const ticket = await Ticket.create({
       title, category, date, location, price, seats, description,
-      seller: req.user._id
+      seller: req.user._id,
+      trustScore,
+      flagged: trustScore < 60
     })
+
     res.status(201).json(ticket)
   } catch (error) {
     res.status(500).json({ message: error.message })
