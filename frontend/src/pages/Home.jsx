@@ -68,13 +68,13 @@ function ParticleCanvas() {
       canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
     }
     function initParticles() {
-      particles = Array.from({ length: 120 }, () => ({
+      particles = Array.from({ length: 250 }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight * 3,
-        r: Math.random() * 2 + 0.5,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -Math.random() * 0.8 - 0.2,
-        o: Math.random() * 0.6 + 0.1,
+        r: Math.random() * 3 + 0.5,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: -Math.random() * 1.2 - 0.3,
+        o: Math.random() * 0.8 + 0.2,
         flicker: Math.random() * Math.PI * 2,
       }));
     }
