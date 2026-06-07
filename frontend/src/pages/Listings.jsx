@@ -12,7 +12,7 @@ function Listings() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const socket = io('http://localhost:8000')
+    const socket = io('https://ticket-resale-backend.onrender.com')
     socket.on('ticketSold', ({ ticketId }) => {
       setTickets((prev) => prev.filter((t) => t._id.toString() !== ticketId.toString()))
     })

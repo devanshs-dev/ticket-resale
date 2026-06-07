@@ -34,7 +34,7 @@ function TicketDetail() {
   }, [id])
 
   useEffect(() => {
-    const socket = io('http://localhost:8000')
+    const socket = io('https://ticket-resale-backend.onrender.com')
     socket.emit('viewingTicket', id)
     socket.on('viewerCount', (count) => setViewers(count))
     return () => {
