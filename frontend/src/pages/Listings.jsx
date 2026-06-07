@@ -1,124 +1,133 @@
-import { useState, useEffect } from 'react'
-import { io } from 'socket.io-client'
-import TicketCard from '../components/TicketCard'
-import API from '../api'
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import TicketCard from '../components/TicketCard';
+import api from '../api';
 
-const categories = ['All', 'Concert', 'Travel', 'Sports', 'Movies', 'Theatre', 'Subscription', 'Reservation']
+const CATEGORIES = ['ALL', 'CONCERTS', 'TRAVEL', 'SPORTS', 'MOVIES', 'THEATRE', 'SUBSCRIPTIONS', 'RESERVATIONS'];
+const SORT_OPTIONS = [
+  { value: 'recent',    label: 'NEWEST FIRST' },
+  { value: 'price_asc', label: 'PRICE: LOW → HIGH' },
+  { value: 'price_desc', label: 'PRICE: HIGH → LOW' },
+  { value: 'trust',     label: 'TRUST SCORE' },
+];
 
-function Listings() {
-  const [tickets, setTickets] = useState([])
-  const [selected, setSelected] = useState('All')
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+export default function Listings() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('ALL');
+  const [sort, setSort] = useState('recent');
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [inputVal, setInputVal] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
-    const socket = io('https://ticket-resale-backend.onrender.com')
-    socket.on('ticketSold', ({ ticketId }) => {
-      setTickets((prev) => prev.filter((t) => t._id.toString() !== ticketId.toString()))
-    })
-    return () => socket.disconnect()
-  }, [])
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (query) params.set('search', query);
+    if (category !== 'ALL') params.set('category', category.toLowerCase());
+    if (sort) params.set('sort', sort);
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      setLoading(true)
-      try {
-        const { data } = await API.get('/tickets', { params: { category: selected, search } })
-        setTickets(data)
-      } catch (error) {
-        console.error(error)
-      }
-      setLoading(false)
-    }
-    fetchTickets()
-  }, [selected, search])
+    api.get(`/tickets?${params}`)
+      .then(res => setTickets(res.data?.tickets || res.data || []))
+      .catch(() => setTickets([]))
+      .finally(() => setLoading(false));
+  }, [query, category, sort]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setQuery(inputVal);
+  };
 
   return (
-    <div style={{ background: 'var(--color-bg)', minHeight: '100vh' }}>
-
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1a0533 0%, #0f0f1a 100%)',
-        borderBottom: '1px solid var(--color-border)',
-        padding: '48px 32px',
-        textAlign: 'center',
-      }}>
-        <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '2.2rem', marginBottom: '20px' }}>
-          Browse All Tickets
-        </h1>
-        <div style={{ maxWidth: '500px', margin: '0 auto', position: 'relative' }}>
-          <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem' }}>🔍</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tickets..."
-            style={{
-              width: '100%',
-              padding: '14px 20px 14px 44px',
-              borderRadius: '12px',
-              border: '1px solid var(--color-border)',
-              background: 'rgba(255,255,255,0.06)',
-              color: 'var(--color-text)',
-              fontSize: '1rem',
-              outline: 'none',
-            }}
-          />
+    <div className="page-root">
+      <div className="container" style={{ paddingTop: '48px', paddingBottom: '80px' }}>
+        {/* Page heading */}
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div className="signal-dot" />
+            <span style={{ color: 'rgba(204,0,0,0.5)', fontSize: '0.65rem', letterSpacing: '0.2em', fontFamily: 'var(--font-mono)' }}>
+              LIVE FEED
+            </span>
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+            letterSpacing: '0.1em', color: '#fff', lineHeight: 1,
+            textShadow: '0 0 30px rgba(204,0,0,0.2)',
+          }}>
+            ACTIVE <span style={{ color: 'var(--blood)', textShadow: '0 0 20px #cc0000, 0 0 40px #8b0000' }}>SIGNALS</span>
+          </h1>
         </div>
-      </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
-        {/* Category filters */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
-          {categories.map((cat) => (
+        {/* Search + Sort row */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex', flex: '1', minWidth: '260px', gap: '0' }}>
+            <input
+              className="st-input"
+              style={{ flex: 1, borderRight: 'none' }}
+              placeholder="SEARCH EVENTS..."
+              value={inputVal}
+              onChange={e => setInputVal(e.target.value)}
+            />
+            <button
+              type="submit"
+              style={{ padding: '0 20px', background: 'var(--blood)', border: '1px solid var(--blood)', color: '#000', fontFamily: 'var(--font-display)', letterSpacing: '0.1em', cursor: 'pointer' }}
+            >
+              SCAN →
+            </button>
+          </form>
+          <select
+            className="st-select"
+            style={{ width: 'auto', minWidth: '200px' }}
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+          >
+            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+
+        {/* Category pills */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
+          {CATEGORIES.map(cat => (
             <button
               key={cat}
-              onClick={() => setSelected(cat)}
-              style={{
-                padding: '8px 18px',
-                borderRadius: '10px',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                border: selected === cat ? 'none' : '1px solid var(--color-border)',
-                background: selected === cat
-                  ? 'linear-gradient(135deg, #7c3aed, #a855f7)'
-                  : 'var(--color-surface)',
-                color: selected === cat ? '#fff' : 'var(--color-muted)',
-              }}
+              className={`cat-pill ${category === cat ? 'active' : ''}`}
+              onClick={() => setCategory(cat)}
             >
               {cat}
             </button>
           ))}
         </div>
 
+        {/* Divider */}
+        <div className="section-header" style={{ marginBottom: '28px' }}>
+          <div className="section-line" />
+          <div className="section-title">
+            {loading ? '// SCANNING...' : `// ${tickets.length} RESULTS`}
+          </div>
+          <div className="section-line reverse" />
+        </div>
+
+        {/* Results */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--color-muted)', fontSize: '1.1rem' }}>
-            Loading tickets...
+          <div style={{ textAlign: 'center', padding: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div className="st-spinner" />
+            <span style={{ color: '#333', fontSize: '0.7rem', letterSpacing: '0.15em', fontFamily: 'var(--font-mono)' }}>
+              SCANNING THE UPSIDE DOWN...
+            </span>
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-title">NO SIGNALS DETECTED</div>
+            <div className="empty-state-sub">Try adjusting your frequency</div>
           </div>
         ) : (
-          <>
-            <p style={{ color: 'var(--color-muted)', marginBottom: '24px', fontSize: '0.9rem' }}>
-              {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} found
-            </p>
-            {tickets.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '80px 0' }}>
-                <p style={{ fontSize: '3rem', marginBottom: '16px' }}>🎫</p>
-                <p style={{ color: 'var(--color-muted)', fontSize: '1.1rem' }}>No tickets found</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-                {tickets.map((ticket) => (
-                  <TicketCard key={ticket._id} ticket={{ ...ticket, id: ticket._id }} />
-                ))}
-              </div>
-            )}
-          </>
+          <div className="ticket-grid">
+            {tickets.map((ticket, i) => (
+              <TicketCard key={ticket._id || ticket.id || i} ticket={ticket} index={i} />
+            ))}
+          </div>
         )}
       </div>
     </div>
-  )
+  );
 }
-
-export default Listings

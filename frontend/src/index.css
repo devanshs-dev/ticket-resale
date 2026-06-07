@@ -1,72 +1,416 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ============================================================
+   STRANGER THINGS — TICKET RESALE
+   index.css — Design System Foundation
+   ============================================================ */
 
-@layer base {
-  :root {
-    --color-bg: #0a0a0f;
-    --color-surface: #13131a;
-    --color-surface2: #1c1c28;
-    --color-border: #2a2a3a;
-    --color-accent: #7c3aed;
-    --color-accent2: #a855f7;
-    --color-text: #e2e8f0;
-    --color-muted: #64748b;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=VT323:wght@400&family=Share+Tech+Mono&display=swap');
 
-  * { box-sizing: border-box; }
-
-  body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--color-bg); }
-  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+/* ── CSS CUSTOM PROPERTIES ───────────────────────────────── */
+:root {
+  --black:         #000000;
+  --blood:         #cc0000;
+  --blood-dark:    #8b0000;
+  --blood-deeper:  #3d0000;
+  --blood-dim:     #440000;
+  --blood-ghost:   rgba(204, 0, 0, 0.08);
+  --blood-10:      rgba(204, 0, 0, 0.10);
+  --blood-20:      rgba(204, 0, 0, 0.20);
+  --blood-33:      rgba(204, 0, 0, 0.33);
+  --blood-44:      rgba(204, 0, 0, 0.44);
+  --blood-66:      rgba(204, 0, 0, 0.66);
+  --text-bright:   #ffffff;
+  --text-mid:      #888888;
+  --text-muted:    #555555;
+  --text-dim:      #444444;
+  --text-ghost:    #222222;
+  --surface-0:     #000000;
+  --surface-1:     #050000;
+  --surface-2:     #0a0000;
+  --surface-3:     #110000;
+  --surface-nav:   rgba(0, 0, 0, 0.85);
+  --grad-concert:  linear-gradient(135deg, #1a0000, #330000);
+  --grad-sports:   linear-gradient(135deg, #001a00, #003300);
+  --grad-travel:   linear-gradient(135deg, #00001a, #000033);
+  --grad-movies:   linear-gradient(135deg, #1a1000, #332000);
+  --grad-theatre:  linear-gradient(135deg, #0d001a, #1a0033);
+  --grad-subs:     linear-gradient(135deg, #001a1a, #003333);
+  --font-display:  'Bebas Neue', cursive;
+  --font-mono:     'Share Tech Mono', monospace;
+  --font-retro:    'VT323', monospace;
+  --glow-sm:       0 0 10px rgba(204, 0, 0, 0.44);
+  --glow-md:       0 0 20px rgba(204, 0, 0, 0.44), 0 0 40px rgba(139, 0, 0, 0.33);
+  --glow-lg:       0 0 30px rgba(204, 0, 0, 0.55), 0 0 80px rgba(139, 0, 0, 0.33), 0 0 120px rgba(139, 0, 0, 0.15);
+  --glow-text-sm:  0 0 10px rgba(204, 0, 0, 0.55);
+  --glow-text-md:  0 0 20px #cc0000, 0 0 40px #8b0000, 0 0 80px rgba(139, 0, 0, 0.53);
+  --glow-text-lg:  0 0 30px #cc0000, 0 0 60px #8b0000, 0 0 100px rgba(139, 0, 0, 0.40);
+  --border-dim:    1px solid rgba(204, 0, 0, 0.13);
+  --border-mid:    1px solid rgba(204, 0, 0, 0.33);
+  --border-bright: 1px solid rgba(204, 0, 0, 0.66);
+  --border-full:   1px solid #cc0000;
+  --z-bg: 0; --z-content: 5; --z-nav: 10; --z-modal: 100; --z-overlay: 9999;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-@layer utilities {
-  .glass {
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
-  }
-  .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 16px;
-    transition: all 0.2s ease;
-  }
-  .card:hover {
-    border-color: var(--color-accent);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(124,58,237,0.15);
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent2));
-    color: white;
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-  .btn-primary:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
-  }
-  .badge {
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { background: var(--black); color: var(--text-bright); font-family: var(--font-mono); overflow-x: hidden; line-height: 1.5; }
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--font-mono); cursor: pointer; border: none; }
+input, textarea, select { font-family: var(--font-mono); }
+img { display: block; max-width: 100%; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #8b0000; }
+::-webkit-scrollbar-thumb:hover { background: #cc0000; }
+::selection { background: #cc0000; color: #000; }
+
+/* ── GLOBAL ELEMENTS ─────────────────────────────────────── */
+#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+#flicker-overlay {
+  position: fixed; inset: 0; background: #000;
+  z-index: 9999; pointer-events: none;
+  animation: tvOn 2.5s forwards;
+}
+
+/* ── KEYFRAMES ───────────────────────────────────────────── */
+@keyframes tvOn {
+  0%   { opacity: 1; }   5%  { opacity: 0.9; } 6%  { opacity: 1; }
+  10%  { opacity: 0.8; } 11% { opacity: 1; }   18% { opacity: 0.6; }
+  19%  { opacity: 0.95; } 25% { opacity: 0; }  26% { opacity: 0.75; }
+  27%  { opacity: 0; }   28% { opacity: 0.5; } 29% { opacity: 0; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes logoFlicker {
+  0%, 94%, 100% { opacity: 1; text-shadow: 0 0 20px #cc0000, 0 0 40px #8b0000, 0 0 80px rgba(139,0,0,0.5); }
+  95% { opacity: 0.35; text-shadow: none; }
+  96% { opacity: 1; text-shadow: 0 0 20px #cc0000, 0 0 40px #8b0000; }
+  97% { opacity: 0.6; }
+  98% { opacity: 1; }
+  99% { opacity: 0.8; }
+}
+
+@keyframes redGlow {
+  from { text-shadow: 0 0 30px #cc0000, 0 0 60px #8b0000, 0 0 80px rgba(139,0,0,0.5); }
+  to   { text-shadow: 0 0 50px #cc0000, 0 0 100px #cc0000, 0 0 150px #8b0000, 0 0 200px rgba(139,0,0,0.4); }
+}
+
+@keyframes titleFlicker {
+  0%, 88%, 100% { opacity: 1; }
+  89% { opacity: 0.7; } 90% { opacity: 1; }
+  92% { opacity: 0.5; } 93% { opacity: 1; }
+  95% { opacity: 0.85; } 96% { opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #cc0000, 0 0 12px #cc0000; }
+  50% { opacity: 0.08; box-shadow: none; }
+}
+
+@keyframes staticShift {
+  0%   { background-position: 0 0; }
+  25%  { background-position: 50px 20px; }
+  50%  { background-position: -30px 60px; }
+  75%  { background-position: 80px -40px; }
+  100% { background-position: 0 0; }
+}
+
+@keyframes scanlineMove {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 10px; }
+}
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spinnerRotate { to { transform: rotate(360deg); } }
+
+@keyframes glowBreathe {
+  0%, 100% { box-shadow: 0 0 10px rgba(204,0,0,0.2), 0 0 20px rgba(139,0,0,0.1); }
+  50%      { box-shadow: 0 0 20px rgba(204,0,0,0.4), 0 0 40px rgba(139,0,0,0.2); }
+}
+
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(204,0,0,0.5); }
+  100% { box-shadow: 0 0 0 16px rgba(204,0,0,0); }
+}
+
+@keyframes borderCrawl {
+  from { background-position: -100% 0; }
+  to   { background-position:  200% 0; }
+}
+
+@keyframes typingCursor {
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+
+/* ── REUSABLE HELPERS ────────────────────────────────────── */
+.static-noise {
+  position: absolute; inset: 0; opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: staticShift 0.45s steps(1) infinite; pointer-events: none;
+}
+
+.scanline-overlay {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.28) 2px, rgba(0,0,0,0.28) 4px);
+  pointer-events: none; animation: scanlineMove 0.3s linear infinite;
+}
+
+.upside-down-sky {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(204,0,0,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 20%, rgba(139,0,0,0.10) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(26,0,0,0.30) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.divider-h {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(204,0,0,0.44), transparent);
+  border: none; margin: 0;
+}
+
+/* ── SIGNAL BADGE ────────────────────────────────────────── */
+.signal-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border: var(--border-mid);
+  color: var(--blood); padding: 8px 20px; border-radius: 2px;
+  font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 20px rgba(204,0,0,0.13), inset 0 0 20px rgba(204,0,0,0.07);
+}
+.signal-dot {
+  width: 8px; height: 8px; background: var(--blood); border-radius: 50%;
+  animation: blink 1s infinite; flex-shrink: 0;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.btn-red {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; background: var(--blood); border: 1px solid var(--blood);
+  color: #000; font-family: var(--font-display); font-size: 1rem;
+  letter-spacing: 0.12em; cursor: pointer; transition: all 0.2s ease;
+}
+.btn-red:hover { background: #ff1111; box-shadow: var(--glow-lg); transform: translateY(-1px); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; background: transparent; border: 1px solid rgba(204,0,0,0.5);
+  color: var(--blood); font-family: var(--font-mono); font-size: 0.8rem;
+  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;
+}
+.btn-ghost:hover { background: rgba(204,0,0,0.1); border-color: var(--blood); box-shadow: 0 0 20px rgba(204,0,0,0.2); }
+
+/* ── FORM ────────────────────────────────────────────────── */
+.st-input {
+  width: 100%; padding: 14px 16px; background: var(--surface-1);
+  border: 1px solid rgba(204,0,0,0.3); color: var(--blood);
+  font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.04em;
+  outline: none; transition: border-color 0.25s, box-shadow 0.25s;
+}
+.st-input::placeholder { color: var(--blood-dim); letter-spacing: 0.06em; }
+.st-input:focus { border-color: var(--blood); box-shadow: 0 0 20px rgba(204,0,0,0.15), inset 0 0 10px rgba(204,0,0,0.05); }
+
+.st-label {
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(204,0,0,0.65); margin-bottom: 6px; display: block;
+}
+
+.st-select {
+  width: 100%; padding: 14px 16px; background: var(--surface-1);
+  border: 1px solid rgba(204,0,0,0.3); color: var(--blood);
+  font-family: var(--font-mono); font-size: 0.9rem; outline: none;
+  transition: border-color 0.25s; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.st-select:focus { border-color: var(--blood); box-shadow: 0 0 20px rgba(204,0,0,0.15); }
+.st-select option { background: var(--surface-1); color: #fff; }
+
+/* ── TICKET CARD ─────────────────────────────────────────── */
+.ticket-card {
+  background: var(--surface-1); border: 1px solid rgba(204,0,0,0.13);
+  border-radius: 2px; overflow: hidden; cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1); position: relative;
+  transform-style: preserve-3d; will-change: transform;
+  animation: cardEnter 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+.ticket-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, #cc0000 30%, #cc0000 70%, transparent);
+  opacity: 0; transition: opacity 0.3s; z-index: 2;
+}
+.ticket-card:hover { border-color: rgba(204,0,0,0.44); transform: translateY(-5px); box-shadow: 0 12px 40px rgba(204,0,0,0.15), 0 0 60px rgba(204,0,0,0.07); }
+.ticket-card:hover::before { opacity: 1; }
+.ticket-card:hover .ticket-card-top { filter: brightness(1.35) saturate(1.2); }
+
+.ticket-card-top {
+  height: 96px; position: relative; overflow: hidden;
+  display: flex; align-items: flex-end; padding: 12px 14px; transition: filter 0.3s;
+}
+.card-top-concert  { background: linear-gradient(135deg, #1a0000, #330000); }
+.card-top-sports   { background: linear-gradient(135deg, #001a00, #003300); }
+.card-top-travel   { background: linear-gradient(135deg, #00001a, #000033); }
+.card-top-movies   { background: linear-gradient(135deg, #1a1000, #332000); }
+.card-top-theatre  { background: linear-gradient(135deg, #0d001a, #1a0033); }
+.card-top-subs     { background: linear-gradient(135deg, #001a1a, #003333); }
+
+.card-ghost-text {
+  font-family: var(--font-display); font-size: 2.8rem; letter-spacing: 0.08em;
+  opacity: 0.13; color: var(--blood); line-height: 1; text-shadow: 0 0 10px rgba(204,0,0,0.5);
+  pointer-events: none; user-select: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+}
+
+.ticket-card-body { padding: 16px; }
+.ticket-card-category {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 0.6rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: rgba(204,0,0,0.65);
+  margin-bottom: 8px; font-family: var(--font-mono);
+}
+.ticket-card-title { color: #ddd; font-size: 0.95rem; line-height: 1.3; margin-bottom: 10px; font-family: var(--font-mono); }
+.ticket-card-meta { color: var(--text-dim); font-size: 0.72rem; margin-bottom: 3px; font-family: var(--font-mono); }
+.ticket-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(204,0,0,0.13); }
+.ticket-card-price { font-family: var(--font-display); font-size: 1.5rem; color: #fff; letter-spacing: 0.05em; line-height: 1; }
+.ticket-card-price small { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim); }
+
+/* ── SIGNAL BARS ─────────────────────────────────────────── */
+.signal-bars { display: flex; gap: 2px; align-items: flex-end; }
+.signal-bars span { width: 3px; background: rgba(204,0,0,0.4); border-radius: 1px; }
+.signal-bars span:nth-child(1) { height: 4px;  background: rgba(204,0,0,0.3); }
+.signal-bars span:nth-child(2) { height: 7px;  background: rgba(204,0,0,0.5); }
+.signal-bars span:nth-child(3) { height: 10px; background: rgba(204,0,0,0.65); }
+.signal-bars span:nth-child(4) { height: 13px; background: rgba(204,0,0,0.8); }
+.signal-bars span:nth-child(5) { height: 16px; background: #cc0000; }
+
+/* ── TRUST BADGE ─────────────────────────────────────────── */
+.trust-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface-2); border: 1px solid rgba(204,0,0,0.22);
+  color: rgba(204,0,0,0.7); padding: 3px 8px; font-size: 0.6rem;
+  letter-spacing: 0.08em; text-transform: uppercase; font-family: var(--font-mono);
+}
+
+/* ── LIGHTS ROW ──────────────────────────────────────────── */
+.lights-row { display: flex; gap: 0; align-items: center; }
+.bulb-wire { height: 1px; background: #2a2a2a; }
+.light-bulb {
+  width: 14px; height: 14px; border-radius: 50%; background: #111;
+  border: 1px solid #2a2a2a; transition: all 0.08s ease;
+  position: relative; flex-shrink: 0;
+}
+.light-bulb::after {
+  content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 4px; background: #2a2a2a; border-radius: 1px 1px 0 0;
+}
+.light-bulb.on {
+  box-shadow: 0 0 8px var(--bulb-color), 0 0 16px var(--bulb-color), 0 0 24px var(--bulb-color);
+  background: var(--bulb-color); border-color: var(--bulb-color);
+}
+.lights-label { color: var(--text-ghost); font-size: 0.65rem; letter-spacing: 0.15em; margin-top: 8px; text-transform: uppercase; }
+
+/* ── SECTION HEADER ──────────────────────────────────────── */
+.section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.section-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(204,0,0,0.44), transparent); }
+.section-line.reverse { background: linear-gradient(90deg, transparent, rgba(204,0,0,0.44)); }
+.section-title { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.15em; color: var(--blood); text-shadow: 0 0 20px rgba(204,0,0,0.5); white-space: nowrap; }
+
+/* ── CAT PILLS ───────────────────────────────────────────── */
+.cat-pill {
+  padding: 10px 18px; background: var(--surface-1); border: 1px solid rgba(204,0,0,0.22);
+  color: rgba(204,0,0,0.65); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s ease; font-family: var(--font-mono); border-radius: 2px; user-select: none;
+}
+.cat-pill:hover, .cat-pill.active {
+  border-color: var(--blood); color: var(--blood);
+  box-shadow: 0 0 15px rgba(204,0,0,0.2), inset 0 0 15px rgba(204,0,0,0.07);
+  background: var(--surface-2);
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.page-root { position: relative; z-index: 5; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+.container-sm { max-width: 640px; margin: 0 auto; padding: 0 24px; }
+.ticket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+/* ── AUTH CARD ───────────────────────────────────────────── */
+.auth-card {
+  background: var(--surface-1); border: 1px solid rgba(204,0,0,0.22);
+  padding: 48px 40px; position: relative; overflow: hidden;
+}
+.auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--blood), transparent); }
+.auth-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(204,0,0,0.04), transparent 60%); pointer-events: none; }
+.auth-title { font-family: var(--font-display); font-size: 2.8rem; letter-spacing: 0.1em; color: #fff; margin-bottom: 8px; text-shadow: 0 0 30px rgba(204,0,0,0.3); }
+.auth-subtitle { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 36px; }
+
+/* ── STAT CARDS ──────────────────────────────────────────── */
+.stat-card {
+  background: var(--surface-1); border: 1px solid rgba(204,0,0,0.15);
+  padding: 24px; position: relative; overflow: hidden; transition: all 0.3s;
+}
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--blood); transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+.stat-card:hover::before { transform: scaleX(1); }
+.stat-card:hover { border-color: rgba(204,0,0,0.3); box-shadow: 0 0 30px rgba(204,0,0,0.08); }
+.stat-value { font-family: var(--font-display); font-size: 3rem; letter-spacing: 0.05em; color: #fff; line-height: 1; }
+.stat-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+.stat-change { font-size: 0.7rem; color: #00cc44; margin-top: 8px; }
+.stat-change.down { color: var(--blood); }
+
+/* ── TABLE ───────────────────────────────────────────────── */
+.st-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; }
+.st-table th { padding: 10px 14px; background: rgba(204,0,0,0.08); border: 1px solid rgba(204,0,0,0.15); color: rgba(204,0,0,0.7); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; text-align: left; }
+.st-table td { padding: 12px 14px; border: 1px solid rgba(204,0,0,0.08); color: #ccc; vertical-align: middle; }
+.st-table tr:hover td { background: rgba(204,0,0,0.04); border-color: rgba(204,0,0,0.15); }
+
+/* ── BADGES ──────────────────────────────────────────────── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; font-family: var(--font-mono); }
+.badge-red    { background: rgba(204,0,0,0.15);  color: #cc0000;  border: 1px solid rgba(204,0,0,0.3); }
+.badge-green  { background: rgba(0,204,68,0.1);   color: #00cc44;  border: 1px solid rgba(0,204,68,0.25); }
+.badge-yellow { background: rgba(255,170,0,0.1);  color: #ffaa00;  border: 1px solid rgba(255,170,0,0.25); }
+.badge-gray   { background: rgba(80,80,80,0.2);   color: #555;     border: 1px solid rgba(80,80,80,0.3); }
+
+/* ── MODAL ───────────────────────────────────────────────── */
+.st-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.2s ease; }
+.st-modal { background: var(--surface-1); border: 1px solid rgba(204,0,0,0.33); padding: 40px; max-width: 520px; width: 100%; position: relative; animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+.st-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #cc0000, transparent); }
+
+/* ── TOAST ───────────────────────────────────────────────── */
+.st-toast { position: fixed; bottom: 32px; right: 32px; background: var(--surface-1); border: 1px solid rgba(204,0,0,0.4); border-left: 3px solid var(--blood); padding: 14px 20px; font-family: var(--font-mono); font-size: 0.8rem; color: #fff; z-index: 500; box-shadow: var(--glow-sm); animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); max-width: 320px; }
+
+/* ── CHART CARD ──────────────────────────────────────────── */
+.chart-card { background: var(--surface-1); border: 1px solid rgba(204,0,0,0.13); padding: 24px; position: relative; }
+.chart-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(204,0,0,0.5), transparent); }
+.chart-title { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 0.12em; color: rgba(204,0,0,0.8); margin-bottom: 20px; text-shadow: 0 0 10px rgba(204,0,0,0.3); }
+
+/* ── SPINNER ─────────────────────────────────────────────── */
+.st-spinner { width: 24px; height: 24px; border: 2px solid rgba(204,0,0,0.15); border-top-color: #cc0000; border-radius: 50%; animation: spinnerRotate 0.7s linear infinite; }
+
+/* ── EMPTY STATE ─────────────────────────────────────────── */
+.empty-state { text-align: center; padding: 80px 24px; color: var(--text-dim); }
+.empty-state-title { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.1em; color: rgba(204,0,0,0.3); margin-bottom: 12px; }
+.empty-state-sub { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .container-sm { padding: 0 16px; }
+  .ticket-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .auth-card { padding: 32px 24px; }
+  .st-modal { padding: 28px 24px; }
+}
+@media (max-width: 480px) {
+  .ticket-grid { grid-template-columns: 1fr; }
 }

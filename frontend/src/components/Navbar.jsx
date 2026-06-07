@@ -1,132 +1,220 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-function Navbar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const user = JSON.parse(localStorage.getItem('user'))
+export default function Navbar({ user, onLogout }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const logoRef = useRef(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user')
-    navigate('/login')
-  }
+  // Logo glitch effect — fires every 500ms, triggers only if random > 0.95
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() > 0.95 && logoRef.current) {
+        const shift = (Math.random() * 4 - 2).toFixed(1);
+        logoRef.current.style.transform = `translateX(${shift}px)`;
+        setTimeout(() => {
+          if (logoRef.current) logoRef.current.style.transform = '';
+        }, 100);
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
-  const isActive = (path) => location.pathname === path
-
-  const linkStyle = (path) => ({
-    color: isActive(path) ? '#a855f7' : 'var(--color-muted)',
-    fontWeight: 500,
-    fontSize: '0.9rem',
-    textDecoration: 'none',
-    padding: '6px 12px',
-    borderRadius: '8px',
-    background: isActive(path) ? 'rgba(168,85,247,0.1)' : 'transparent',
-    transition: 'all 0.2s',
-  })
+  const isActive = (path) => location.pathname === path;
 
   return (
     <nav style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      background: 'rgba(10,10,15,0.85)',
-      backdropFilter: 'blur(16px)',
-      borderBottom: '1px solid var(--color-border)',
-      padding: '0 32px',
-      height: '64px',
+      position: 'relative',
+      zIndex: 'var(--z-nav)',
+      padding: '16px 40px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
+      borderBottom: '1px solid rgba(139,0,0,0.22)',
+      background: 'rgba(0,0,0,0.85)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
     }}>
+      {/* LOGO */}
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <span style={{
-          fontSize: '1.25rem',
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
+        <div
+          ref={logoRef}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.9rem',
+            letterSpacing: '0.15em',
+            color: 'var(--blood)',
+            textShadow: '0 0 20px #cc0000, 0 0 40px #8b0000, 0 0 80px rgba(139,0,0,0.5)',
+            animation: 'logoFlicker 8s infinite',
+            display: 'inline-block',
+            transition: 'transform 80ms linear',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
           TicketResale
-        </span>
+        </div>
       </Link>
 
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-        <Link to="/listings" style={linkStyle('/listings')}>Browse</Link>
-        <Link to="/sell" style={linkStyle('/sell')}>Sell</Link>
-        <Link to="/analytics" style={linkStyle('/analytics')}>Analytics</Link>
+      {/* NAV LINKS */}
+      <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+        {[
+          { label: 'BROWSE', path: '/listings' },
+          { label: 'SELL',   path: '/sell' },
+          { label: 'ANALYTICS', path: '/analytics' },
+        ].map(({ label, path }) => (
+          <Link
+            key={path}
+            to={path}
+            style={{
+              color: isActive(path) ? 'var(--blood)' : '#666',
+              fontSize: '0.82rem',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              fontFamily: 'var(--font-mono)',
+              textDecoration: 'none',
+              transition: 'all 0.25s',
+              borderBottom: isActive(path) ? '1px solid var(--blood)' : '1px solid transparent',
+              paddingBottom: '2px',
+              textShadow: isActive(path) ? '0 0 10px rgba(204,0,0,0.6)' : 'none',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--blood)'; e.currentTarget.style.textShadow = '0 0 10px rgba(204,0,0,0.5)'; }}
+            onMouseLeave={e => {
+              if (!isActive(path)) {
+                e.currentTarget.style.color = '#666';
+                e.currentTarget.style.textShadow = 'none';
+              }
+            }}
+          >
+            {label}
+          </Link>
+        ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+      {/* RIGHT SIDE */}
+      <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
         {user ? (
           <>
-            <Link to="/profile" style={{
-              color: 'var(--color-text)',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{
-                width: '30px', height: '30px',
-                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.8rem', fontWeight: 700, color: '#fff',
-              }}>
-                {user.name.charAt(0).toUpperCase()}
-              </span>
-              {user.name.split(' ')[0]}
-            </Link>
-            {user.role === 'admin' && (
-              <Link to="/admin" style={{
-                color: '#f87171',
+            {/* Dashboard link */}
+            <Link
+              to="/dashboard"
+              style={{
+                color: isActive('/dashboard') ? 'var(--blood)' : '#555',
+                fontSize: '0.78rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                fontFamily: 'var(--font-mono)',
                 textDecoration: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                padding: '4px 12px',
-                border: '1px solid rgba(248,113,113,0.3)',
-                borderRadius: '8px',
-                background: 'rgba(248,113,113,0.08)',
-              }}>
-                Admin
+                transition: 'color 0.25s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--blood)'}
+              onMouseLeave={e => { if (!isActive('/dashboard')) e.currentTarget.style.color = '#555'; }}
+            >
+              DASHBOARD
+            </Link>
+
+            {/* Admin badge */}
+            {user.role === 'admin' && (
+              <Link
+                to="/admin"
+                style={{
+                  color: 'rgba(204,0,0,0.65)',
+                  fontSize: '0.68rem',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'var(--font-mono)',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(204,0,0,0.33)',
+                  padding: '5px 12px',
+                  borderRadius: '2px',
+                  transition: 'all 0.2s',
+                  background: 'rgba(204,0,0,0.05)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'var(--blood)';
+                  e.currentTarget.style.color = 'var(--blood)';
+                  e.currentTarget.style.boxShadow = '0 0 12px rgba(204,0,0,0.2)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(204,0,0,0.33)';
+                  e.currentTarget.style.color = 'rgba(204,0,0,0.65)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                ◈ ADMIN
               </Link>
             )}
-            <button onClick={handleLogout} style={{
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-muted)',
-              padding: '6px 16px',
-              borderRadius: '8px',
+
+            {/* Avatar */}
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '50%',
+              background: '#1a0000', border: '1px solid var(--blood)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--blood)', fontWeight: '700', fontSize: '0.85rem',
+              boxShadow: '0 0 10px rgba(204,0,0,0.33)',
+              fontFamily: 'var(--font-mono)',
               cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-            }}>
-              Logout
+              transition: 'box-shadow 0.2s',
+            }}
+            onClick={() => navigate('/profile')}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 20px rgba(204,0,0,0.5)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 10px rgba(204,0,0,0.33)'}
+            title={user.name || user.email}
+            >
+              {(user.name || user.email || 'U')[0].toUpperCase()}
+            </div>
+
+            {/* Logout */}
+            <button
+              onClick={onLogout}
+              style={{
+                color: '#444',
+                fontSize: '0.75rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                fontFamily: 'var(--font-mono)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--blood)'}
+              onMouseLeave={e => e.currentTarget.style.color = '#444'}
+            >
+              LOGOUT
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" style={{
-              color: 'var(--color-muted)',
-              textDecoration: 'none',
-              fontWeight: 500,
-              fontSize: '0.9rem',
-              padding: '6px 16px',
-              border: '1px solid var(--color-border)',
-              borderRadius: '8px',
-            }}>
-              Login
+            <Link
+              to="/login"
+              style={{
+                color: '#555', fontSize: '0.78rem', letterSpacing: '0.1em',
+                textTransform: 'uppercase', fontFamily: 'var(--font-mono)',
+                textDecoration: 'none', transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--blood)'}
+              onMouseLeave={e => e.currentTarget.style.color = '#555'}
+            >
+              LOGIN
             </Link>
-            <Link to="/signup" className="btn-primary" style={{ textDecoration: 'none', fontSize: '0.9rem', padding: '8px 18px' }}>
-              Sign Up
+            <Link
+              to="/signup"
+              style={{
+                color: '#000', fontSize: '0.78rem', letterSpacing: '0.1em',
+                textTransform: 'uppercase', fontFamily: 'var(--font-display)',
+                textDecoration: 'none', background: 'var(--blood)',
+                padding: '8px 18px', transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#ff1111'; e.currentTarget.style.boxShadow = '0 0 20px rgba(204,0,0,0.5)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--blood)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              SIGN UP →
             </Link>
           </>
         )}
       </div>
     </nav>
-  )
+  );
 }
-
-export default Navbar

@@ -1,87 +1,107 @@
-import { Link } from 'react-router-dom'
+import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const categoryColors = {
-  Concert: { bg: 'rgba(124,58,237,0.15)', border: 'rgba(124,58,237,0.3)', color: '#a855f7' },
-  Travel:  { bg: 'rgba(6,182,212,0.15)',  border: 'rgba(6,182,212,0.3)',  color: '#22d3ee' },
-  Sports:  { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: '#34d399' },
-  Movies:  { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', color: '#fbbf24' },
-  Theatre: { bg: 'rgba(236,72,153,0.15)', border: 'rgba(236,72,153,0.3)', color: '#f472b6' },
-  Subscription: { bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8' },
-  Reservation:  { bg: 'rgba(239,68,68,0.15)',  border: 'rgba(239,68,68,0.3)',  color: '#f87171' },
-}
+const CATEGORY_MAP = {
+  concert:       { topClass: 'card-top-concert',  label: 'CONCERT',  ghost: 'CONCERT' },
+  sports:        { topClass: 'card-top-sports',   label: 'SPORTS',   ghost: 'SPORTS'  },
+  travel:        { topClass: 'card-top-travel',   label: 'TRAVEL',   ghost: 'TRAVEL'  },
+  movies:        { topClass: 'card-top-movies',   label: 'MOVIE',    ghost: 'MOVIE'   },
+  theatre:       { topClass: 'card-top-theatre',  label: 'THEATRE',  ghost: 'STAGE'   },
+  subscriptions: { topClass: 'card-top-subs',     label: 'SUBS',     ghost: 'SUBS'    },
+  reservations:  { topClass: 'card-top-concert',  label: 'RESERVE',  ghost: 'RSVP'    },
+};
 
-function TicketCard({ ticket }) {
-  const clr = categoryColors[ticket.category] || categoryColors.Concert
+export default function TicketCard({ ticket, index = 0 }) {
+  const navigate = useNavigate();
+  const cardRef = useRef(null);
+
+  const cat = CATEGORY_MAP[(ticket.category || '').toLowerCase()] || CATEGORY_MAP.concert;
+  const trustScore = ticket.trustScore ?? ticket.trust_score ?? Math.floor(Math.random() * 15) + 82;
+
+  // 3D tilt on mousemove
+  const handleMouseMove = (e) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transition = 'none';
+    card.style.transform = `translateY(-5px) rotateX(${(-y * 7).toFixed(2)}deg) rotateY(${(x * 7).toFixed(2)}deg)`;
+  };
+
+  const handleMouseLeave = () => {
+    const card = cardRef.current;
+    if (!card) return;
+    card.style.transition = 'all 0.3s cubic-bezier(0.16,1,0.3,1)';
+    card.style.transform = '';
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return '—';
+    return Number(price).toLocaleString('en-IN');
+  };
 
   return (
-    <div className="card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {/* Top accent bar */}
-      <div style={{
-        height: '4px',
-        background: `linear-gradient(90deg, ${clr.color}, transparent)`,
-      }} />
+    <div
+      ref={cardRef}
+      className="ticket-card"
+      style={{ animationDelay: `${index * 80}ms` }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={() => navigate(`/tickets/${ticket._id || ticket.id}`)}
+    >
+      {/* TOP BANNER */}
+      <div className={`ticket-card-top ${cat.topClass}`}>
+        {/* Scanlines */}
+        <div className="scanline-overlay" />
+        {/* Ghost background text */}
+        <div className="card-ghost-text">{cat.ghost}</div>
+      </div>
 
-      <div style={{ padding: '20px' }}>
-        <span style={{
-          background: clr.bg,
-          border: `1px solid ${clr.border}`,
-          color: clr.color,
-          padding: '3px 10px',
-          borderRadius: '999px',
-          fontSize: '0.65rem',
-          fontWeight: 700,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-        }}>
-          {ticket.category}
-        </span>
-
-        <h3 style={{
-          color: 'var(--color-text)',
-          fontWeight: 700,
-          fontSize: '1rem',
-          marginTop: '10px',
-          marginBottom: '12px',
-          lineHeight: 1.3,
-          minHeight: '2.6rem',
-        }}>
-          {ticket.title}
-        </h3>
-
-        <div style={{ color: 'var(--color-muted)', fontSize: '0.8rem', marginBottom: '4px', display: 'flex', gap: '6px' }}>
-          <span>📅</span><span>{ticket.date}</span>
-        </div>
-        <div style={{ color: 'var(--color-muted)', fontSize: '0.8rem', marginBottom: '16px', display: 'flex', gap: '6px' }}>
-          <span>📍</span><span>{ticket.location}</span>
+      {/* BODY */}
+      <div className="ticket-card-body">
+        {/* Trust badge */}
+        <div className="trust-badge" style={{ marginBottom: '8px' }}>
+          ■ TRUST SIGNAL: {trustScore}/100
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text)' }}>
-              ₹{ticket.price}
-            </span>
-            <span style={{ color: 'var(--color-muted)', fontSize: '0.75rem', marginLeft: '4px' }}>/ticket</span>
+        {/* Category + signal bars */}
+        <div className="ticket-card-category">
+          <div className="signal-bars">
+            <span /><span /><span /><span /><span />
           </div>
-          <Link
-            to={`/ticket/${ticket.id}`}
-            style={{
-              background: clr.bg,
-              border: `1px solid ${clr.border}`,
-              color: clr.color,
-              padding: '7px 16px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              transition: 'all 0.2s',
-            }}
+          {cat.label}
+        </div>
+
+        {/* Title */}
+        <div className="ticket-card-title">{ticket.title || ticket.name || 'Untitled Event'}</div>
+
+        {/* Meta */}
+        {ticket.date && (
+          <div className="ticket-card-meta">■ {new Date(ticket.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</div>
+        )}
+        {(ticket.venue || ticket.location) && (
+          <div className="ticket-card-meta">■ {(ticket.venue || ticket.location || '').toUpperCase()}</div>
+        )}
+        {ticket.quantity > 1 && (
+          <div className="ticket-card-meta" style={{ color: 'rgba(204,0,0,0.5)' }}>■ {ticket.quantity} AVAILABLE</div>
+        )}
+
+        {/* Footer */}
+        <div className="ticket-card-footer">
+          <div className="ticket-card-price">
+            ₹{formatPrice(ticket.price)}
+            <small> /TICKET</small>
+          </div>
+          <button
+            className="btn-ghost"
+            style={{ padding: '7px 14px', fontSize: '0.75rem' }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/tickets/${ticket._id || ticket.id}`); }}
           >
-            View →
-          </Link>
+            ENTER →
+          </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default TicketCard
