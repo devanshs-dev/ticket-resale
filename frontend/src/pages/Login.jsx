@@ -1,8 +1,9 @@
+// LOGIN
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import API from '../api'
 
-function Login() {
+export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -11,8 +12,7 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    setLoading(true); setError('')
     try {
       const { data } = await API.post('/auth/login', { email, password })
       localStorage.setItem('user', JSON.stringify(data))
@@ -24,56 +24,32 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome back</h1>
-        <p className="text-gray-500 mb-8">Login to your account</p>
+    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '48px', width: '100%', maxWidth: '420px' }}>
+        <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '1.8rem', marginBottom: '6px' }}>Welcome back</h1>
+        <p style={{ color: 'var(--color-muted)', marginBottom: '32px' }}>Login to your account</p>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontSize: '0.9rem' }}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-5">
-            <label className="block text-gray-700 font-medium mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500 text-gray-800"
-              required
-            />
-          </div>
-
-          <div className="mb-8">
-            <label className="block text-gray-700 font-medium mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500 text-gray-800"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 text-lg disabled:opacity-50"
-          >
+          {[
+            { label: 'Email', type: 'email', val: email, set: setEmail, ph: 'you@example.com' },
+            { label: 'Password', type: 'password', val: password, set: setPassword, ph: 'Enter your password' },
+          ].map((f) => (
+            <div key={f.label} style={{ marginBottom: '20px' }}>
+              <label style={{ color: 'var(--color-text)', fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>{f.label}</label>
+              <input type={f.type} value={f.val} onChange={(e) => f.set(e.target.value)} placeholder={f.ph} required
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--color-border)', background: 'var(--color-surface2)', color: 'var(--color-text)', fontSize: '0.95rem', outline: 'none' }} />
+            </div>
+          ))}
+          <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', fontSize: '1rem', padding: '14px', marginTop: '8px', opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <p className="text-center text-gray-500 mt-6">
-          Don't have an account?
-          <Link to="/signup" className="text-blue-600 font-medium hover:underline ml-1">
-            Sign up
-          </Link>
+        <p style={{ textAlign: 'center', color: 'var(--color-muted)', marginTop: '24px', fontSize: '0.9rem' }}>
+          Don't have an account?{' '}
+          <Link to="/signup" style={{ color: '#a855f7', textDecoration: 'none', fontWeight: 600 }}>Sign up</Link>
         </p>
       </div>
     </div>

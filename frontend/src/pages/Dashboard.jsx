@@ -24,75 +24,114 @@ function Dashboard() {
     fetchData()
   }, [])
 
-  if (!user) return <div className="p-10">Please login first.</div>
+  if (!user) return <div style={{ padding: '40px', color: 'var(--color-muted)' }}>Please login first.</div>
 
   const activeData = tab === 'orders' ? orders : sales
+  const totalEarned = sales.reduce((sum, s) => sum + s.price, 0)
+
+  const statCards = [
+    { label: 'Tickets Bought', value: orders.length, icon: '🎟️', color: '#7c3aed' },
+    { label: 'Tickets Sold', value: sales.length, icon: '💸', color: '#06b6d4' },
+    { label: 'Total Earned', value: `₹${totalEarned}`, icon: '💰', color: '#10b981' },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-8">
-      <div className="max-w-4xl mx-auto">
+    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', padding: '40px 32px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">My Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome back, {user.name}</p>
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '2rem', marginBottom: '6px' }}>My Dashboard</h1>
+          <p style={{ color: 'var(--color-muted)' }}>Welcome back, {user.name} 👋</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <p className="text-gray-400 text-sm">Tickets Bought</p>
-            <p className="text-3xl font-bold text-gray-800 mt-1">{orders.length}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <p className="text-gray-400 text-sm">Tickets Sold</p>
-            <p className="text-3xl font-bold text-gray-800 mt-1">{sales.length}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <p className="text-gray-400 text-sm">Total Earned</p>
-            <p className="text-3xl font-bold text-green-600 mt-1">
-              Rs {sales.reduce((sum, s) => sum + s.price, 0)}
-            </p>
-          </div>
+        {/* Stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+          {statCards.map((s) => (
+            <div key={s.label} style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>{s.label}</p>
+                <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
+              </div>
+              <p style={{ color: s.color, fontWeight: 800, fontSize: '1.8rem' }}>{s.value}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="flex gap-3 mb-6">
-          <button onClick={() => setTab('orders')}
-            className={tab === 'orders'
-              ? 'px-5 py-2 rounded-xl font-medium bg-blue-600 text-white'
-              : 'px-5 py-2 rounded-xl font-medium bg-white border border-gray-200 text-gray-600'}>
-            My Purchases
-          </button>
-          <button onClick={() => setTab('sales')}
-            className={tab === 'sales'
-              ? 'px-5 py-2 rounded-xl font-medium bg-blue-600 text-white'
-              : 'px-5 py-2 rounded-xl font-medium bg-white border border-gray-200 text-gray-600'}>
-            My Listings
-          </button>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+          {[['orders', 'My Purchases'], ['sales', 'My Listings']].map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)} style={{
+              padding: '10px 22px',
+              borderRadius: '10px',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              border: 'none',
+              background: tab === key ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : 'var(--color-surface)',
+              color: tab === key ? '#fff' : 'var(--color-muted)',
+              outline: tab !== key ? '1px solid var(--color-border)' : 'none',
+            }}>
+              {label}
+            </button>
+          ))}
         </div>
 
+        {/* Content */}
         {activeData.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-            <p className="text-gray-400 text-lg">Nothing here yet</p>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '16px',
+            padding: '60px',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎫</p>
+            <p style={{ color: 'var(--color-muted)', fontSize: '1rem', marginBottom: '16px' }}>Nothing here yet</p>
             {tab === 'orders'
-              ? <Link to="/listings" className="text-blue-600 hover:underline mt-2 inline-block">Browse tickets</Link>
-              : <Link to="/sell" className="text-blue-600 hover:underline mt-2 inline-block">List a ticket</Link>
+              ? <Link to="/listings" style={{ color: '#a855f7', textDecoration: 'none', fontWeight: 600 }}>Browse tickets →</Link>
+              : <Link to="/sell" style={{ color: '#a855f7', textDecoration: 'none', fontWeight: 600 }}>List a ticket →</Link>
             }
           </div>
         ) : (
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {activeData.map((item) => (
-              <div key={item._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+              <div key={item._id} style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '16px',
+                padding: '20px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'border-color 0.2s',
+              }}>
                 <div>
-                  <h3 className="font-bold text-gray-800">{item.ticket?.title}</h3>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <h3 style={{ color: 'var(--color-text)', fontWeight: 700, marginBottom: '6px' }}>{item.ticket?.title}</h3>
+                  <p style={{ color: 'var(--color-muted)', fontSize: '0.8rem' }}>
                     {item.ticket?.date} · {item.ticket?.location}
                   </p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {tab === 'orders' ? 'Seller: ' + item.seller?.name : 'Buyer: ' + item.buyer?.name}
+                  <p style={{ color: 'var(--color-muted)', fontSize: '0.8rem', marginTop: '2px' }}>
+                    {tab === 'orders' ? `Seller: ${item.seller?.name}` : `Buyer: ${item.buyer?.name}`}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-800">Rs {item.price}</p>
-                  <span className="text-xs bg-green-50 text-green-600 px-3 py-1 rounded-full font-medium">
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', marginBottom: '6px' }}>₹{item.price}</p>
+                  <span style={{
+                    background: 'rgba(16,185,129,0.1)',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    color: '#34d399',
+                    padding: '2px 12px',
+                    borderRadius: '999px',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}>
                     {item.status}
                   </span>
                 </div>

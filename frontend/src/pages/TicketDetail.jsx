@@ -1,11 +1,12 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { io } from 'socket.io-client'
 import API from '../api'
 
-function getTrustColor(score) {
-  if (score >= 90) return 'text-green-600 bg-green-50'
-  if (score >= 75) return 'text-yellow-600 bg-yellow-50'
-  return 'text-red-600 bg-red-50'
+function getTrustStyle(score) {
+  if (score >= 90) return { color: '#34d399', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)', label: 'Highly Trusted' }
+  if (score >= 75) return { color: '#fbbf24', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', label: 'Trusted' }
+  return { color: '#f87171', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', label: 'Low Trust' }
 }
 
 function TicketDetail() {
@@ -15,6 +16,7 @@ function TicketDetail() {
   const [error, setError] = useState('')
   const [qrCode, setQrCode] = useState(null)
   const [purchased, setPurchased] = useState(false)
+  const [viewers, setViewers] = useState(1)
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem('user'))
 
@@ -31,11 +33,18 @@ function TicketDetail() {
     fetchTicket()
   }, [id])
 
-  const handleBuy = async () => {
-    if (!user) {
-      navigate('/login')
-      return
+  useEffect(() => {
+    const socket = io('http://localhost:8000')
+    socket.emit('viewingTicket', id)
+    socket.on('viewerCount', (count) => setViewers(count))
+    return () => {
+      socket.emit('leaveTicket', id)
+      socket.disconnect()
     }
+  }, [id])
+
+  const handleBuy = async () => {
+    if (!user) { navigate('/login'); return }
     try {
       const { data } = await API.post('/orders/buy/' + id)
       setQrCode(data.qrCode)
@@ -45,85 +54,141 @@ function TicketDetail() {
     }
   }
 
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-400 text-xl">Loading...</p>
-    </div>
-  )
+  const centerStyle = { minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 
+  if (loading) return <div style={centerStyle}><p style={{ color: 'var(--color-muted)', fontSize: '1.1rem' }}>Loading...</p></div>
   if (error || !ticket) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Ticket not found</h2>
-        <Link to="/listings" className="text-blue-600 hover:underline">Back to listings</Link>
+    <div style={centerStyle}>
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ color: 'var(--color-text)', fontSize: '1.3rem', fontWeight: 700, marginBottom: '12px' }}>Ticket not found</p>
+        <Link to="/listings" style={{ color: '#a855f7', textDecoration: 'none' }}>← Back to listings</Link>
       </div>
     </div>
   )
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-10 px-8">
-      <div className="max-w-3xl mx-auto">
+  const trust = getTrustStyle(ticket.trustScore)
 
-        <Link to="/listings" className="text-blue-600 hover:underline mb-6 inline-block">
-          Back to listings
+  return (
+    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', padding: '32px' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+
+        <Link to="/listings" style={{ color: '#a855f7', textDecoration: 'none', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '24px' }}>
+          ← Back to listings
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="bg-blue-600 px-8 py-6">
-            <span className="text-blue-100 text-sm font-medium uppercase tracking-wide">
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', overflow: 'hidden' }}>
+
+          {/* Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1a0533, #0f0f1a)',
+            padding: '32px',
+            borderBottom: '1px solid var(--color-border)',
+          }}>
+            <span style={{
+              background: 'rgba(124,58,237,0.15)',
+              border: '1px solid rgba(124,58,237,0.3)',
+              color: '#a855f7',
+              padding: '3px 12px',
+              borderRadius: '999px',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}>
               {ticket.category}
             </span>
-            <h1 className="text-white text-3xl font-bold mt-1">{ticket.title}</h1>
+            <h1 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800, marginTop: '12px', lineHeight: 1.2 }}>
+              {ticket.title}
+            </h1>
           </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">Date</p>
-                <p className="text-gray-800 font-medium">{ticket.date}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">Location</p>
-                <p className="text-gray-800 font-medium">{ticket.location}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">Seat</p>
-                <p className="text-gray-800 font-medium">{ticket.seats || 'N/A'}</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">Seller</p>
-                <p className="text-gray-800 font-medium">{ticket.seller?.name || 'Anonymous'}</p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-gray-700 font-medium mb-2">Description</h3>
-              <p className="text-gray-500 leading-relaxed">{ticket.description}</p>
-            </div>
-
-            <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 mb-6">
-              <div>
-                <p className="text-gray-400 text-sm">Trust Score</p>
-                <span className={'text-lg font-bold px-3 py-1 rounded-lg ' + getTrustColor(ticket.trustScore)}>
-                  {ticket.trustScore}/100
-                </span>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-400 text-sm">Price</p>
-                <p className="text-3xl font-bold text-gray-800">Rs {ticket.price}</p>
-              </div>
-            </div>
-
-            {purchased && qrCode ? (
-              <div className="text-center">
-                <div className="bg-green-50 text-green-600 px-4 py-3 rounded-xl mb-6 font-medium">
-                  Ticket purchased successfully!
+          <div style={{ padding: '32px' }}>
+            {/* Info grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+              {[
+                { label: 'Date', value: ticket.date },
+                { label: 'Location', value: ticket.location },
+                { label: 'Seat', value: ticket.seats || 'General Admission' },
+                { label: 'Seller', value: ticket.seller?.name || 'Anonymous' },
+              ].map((item) => (
+                <div key={item.label} style={{
+                  background: 'var(--color-surface2)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                }}>
+                  <p style={{ color: 'var(--color-muted)', fontSize: '0.75rem', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
+                  <p style={{ color: 'var(--color-text)', fontWeight: 600, fontSize: '0.95rem' }}>{item.value}</p>
                 </div>
-                <p className="text-gray-500 mb-4 font-medium">Your QR Code — show this at entry</p>
-                <img src={qrCode} alt="QR Code" className="mx-auto w-48 h-48" />
+              ))}
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{ color: 'var(--color-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Description</p>
+              <p style={{ color: 'var(--color-text)', lineHeight: 1.7, fontSize: '0.95rem' }}>{ticket.description}</p>
+            </div>
+
+            {/* Trust + Price */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: 'var(--color-surface2)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '16px',
+            }}>
+              <div>
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Trust Score</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    background: trust.bg,
+                    border: `1px solid ${trust.border}`,
+                    color: trust.color,
+                    padding: '4px 14px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                  }}>
+                    {ticket.trustScore}/100
+                  </span>
+                  <span style={{ color: trust.color, fontSize: '0.8rem', fontWeight: 600 }}>{trust.label}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Price</p>
+                <p style={{ color: '#fff', fontWeight: 800, fontSize: '2rem' }}>₹{ticket.price}</p>
+              </div>
+            </div>
+
+            {/* Viewers */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+              <span style={{ width: '8px', height: '8px', background: '#f59e0b', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+              <span style={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 500 }}>
+                {viewers} {viewers === 1 ? 'person' : 'people'} viewing this ticket
+              </span>
+            </div>
+
+            {/* Buy / QR */}
+            {purchased && qrCode ? (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  background: 'rgba(16,185,129,0.1)',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  color: '#34d399',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  marginBottom: '24px',
+                  fontWeight: 600,
+                }}>
+                  ✅ Ticket purchased successfully!
+                </div>
+                <p style={{ color: 'var(--color-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>Your QR Code — show this at entry</p>
+                <img src={qrCode} alt="QR Code" style={{ width: '180px', height: '180px', margin: '0 auto', display: 'block', borderRadius: '12px' }} />
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="w-full mt-6 bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700"
+                  className="btn-primary"
+                  style={{ width: '100%', marginTop: '24px', fontSize: '1rem', padding: '14px' }}
                 >
                   Go to Dashboard
                 </button>
@@ -131,9 +196,10 @@ function TicketDetail() {
             ) : (
               <button
                 onClick={handleBuy}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700"
+                className="btn-primary"
+                style={{ width: '100%', fontSize: '1.1rem', padding: '16px' }}
               >
-                Buy Now — Rs {ticket.price}
+                Buy Now — ₹{ticket.price}
               </button>
             )}
           </div>

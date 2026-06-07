@@ -14,6 +14,8 @@ const buyTicket = async (req, res) => {
 
     ticket.status = 'sold'
     await ticket.save()
+    const io = req.app.get('io')
+    io.emit('ticketSold', { ticketId: ticket._id.toString() })
 
     const order = await Order.create({
       ticket: ticket._id,

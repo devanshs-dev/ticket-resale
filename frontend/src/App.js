@@ -8,6 +8,9 @@ import TicketDetail from './pages/TicketDetail'
 import Sell from './pages/Sell'
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
+import Footer from './components/Footer'
+import Profile from './pages/Profile'
+import Admin from './pages/Admin'
 
 function App() {
   return (
@@ -22,7 +25,10 @@ function App() {
         <Route path="/sell" element={<Sell />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   )
 }
