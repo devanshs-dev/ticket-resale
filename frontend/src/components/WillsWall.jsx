@@ -1,145 +1,132 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react'
 
-/**
- * WillsWall
- * Empty-state component: Joyce's alphabet wall with flickering lights
- * that spell out a message (like Will communicating from the Upside Down).
- *
- * Props:
- *   message: string (default "NO SIGNALS")
- */
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const BULB_COLORS = {
-  A: '#ff0000', B: '#ff4400', C: '#ffaa00', D: '#00cc00', E: '#0044ff',
-  F: '#ff0066', G: '#ff8800', H: '#cc0000', I: '#ffcc00', J: '#00aaff',
-  K: '#ff2200', L: '#44ff00', M: '#ff0044', N: '#ff6600', O: '#0066ff',
-  P: '#ff00aa', Q: '#aaff00', R: '#ff3300', S: '#ff0000', T: '#ffaa00',
-  U: '#00ffaa', V: '#ff6600', W: '#ff0000', X: '#aa00ff', Y: '#ffcc00', Z: '#00ccff',
-};
-const ROW_LEN = 13; // letters per row
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const BULB_COLORS = ['#ff0000','#ff4400','#ffaa00','#ff6600','#cc0000','#ff2200','#ffcc00','#00ff00','#0044ff','#ff0066']
 
 export default function WillsWall({ message = 'NO SIGNALS' }) {
-  const [litLetters, setLitLetters] = useState(new Set());
-  const phaseRef = useRef(0); // 0 = random, 1 = spelling
-  const idxRef = useRef(0);
-  const timerRef = useRef(null);
+  const [litIndex, setLitIndex] = useState(-1)
+  const [phase, setPhase] = useState('random') // 'random' | 'spell'
+  const [spellPos, setSpellPos] = useState(0)
 
-  const TARGET = message.toUpperCase().replace(/[^A-Z]/g, '');
+  const letters = ALPHABET.split('')
+  const msg = message.toUpperCase().replace(/[^A-Z ]/g, '')
+
+  // Map each letter to a bulb color
+  const letterColors = {}
+  letters.forEach((l, i) => {
+    letterColors[l] = BULB_COLORS[i % BULB_COLORS.length]
+  })
 
   useEffect(() => {
-    const phaseSwitch = setTimeout(() => { phaseRef.current = 1; }, 3500);
+    let timer
 
-    function animate() {
-      if (phaseRef.current === 0) {
-        // Random flickering
-        const n = new Set();
-        const count = Math.floor(Math.random() * 4) + 1;
-        for (let i = 0; i < count; i++) {
-          n.add(ALPHABET[Math.floor(Math.random() * 26)]);
-        }
-        setLitLetters(n);
-        timerRef.current = setTimeout(animate, 60 + Math.random() * 200);
-      } else {
-        // Spell the message letter by letter
-        const i = idxRef.current;
-        const letter = TARGET[i % TARGET.length];
-        setLitLetters(new Set(letter ? [letter] : []));
-        idxRef.current++;
-        // Pause at end of message
-        const delay = i > 0 && i % TARGET.length === 0 ? 1200 : 350;
-        timerRef.current = setTimeout(animate, delay);
-      }
+    // Phase 1: random flicker for 3s
+    if (phase === 'random') {
+      timer = setInterval(() => {
+        setLitIndex(Math.floor(Math.random() * 26))
+      }, 120)
+      setTimeout(() => {
+        setPhase('spell')
+        clearInterval(timer)
+      }, 3000)
     }
-    animate();
 
-    return () => {
-      clearTimeout(phaseSwitch);
-      clearTimeout(timerRef.current);
-    };
-  }, [TARGET]);
+    // Phase 2: spell out the message
+    if (phase === 'spell') {
+      let pos = 0
+      function next() {
+        if (pos >= msg.length) {
+          pos = 0
+          setTimeout(next, 800)
+          return
+        }
+        const ch = msg[pos]
+        if (ch === ' ') {
+          setLitIndex(-1)
+        } else {
+          setLitIndex(letters.indexOf(ch))
+        }
+        pos++
+        timer = setTimeout(next, 380)
+      }
+      next()
+    }
 
-  const rows = [];
-  for (let r = 0; r < Math.ceil(26 / ROW_LEN); r++) {
-    rows.push(ALPHABET.slice(r * ROW_LEN, (r + 1) * ROW_LEN).split(''));
-  }
+    return () => { clearInterval(timer); clearTimeout(timer) }
+  }, [phase, msg])
 
   return (
-    <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-      {/* Wallpaper texture */}
+    <div style={{
+      background: '#050000',
+      border: '1px solid rgba(204,0,0,0.2)',
+      padding: '40px 32px',
+      textAlign: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Wall texture */}
       <div style={{
-        background: 'repeating-linear-gradient(0deg, rgba(204,0,0,0.02) 0px, rgba(204,0,0,0.02) 1px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, rgba(204,0,0,0.02) 0px, rgba(204,0,0,0.02) 1px, transparent 1px, transparent 40px)',
-        border: '1px solid rgba(204,0,0,0.1)',
-        padding: '40px 32px 32px',
-        position: 'relative',
-        maxWidth: '680px',
-        margin: '0 auto',
+        position: 'absolute', inset: 0,
+        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(204,0,0,0.03) 28px, rgba(204,0,0,0.03) 29px)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: '0.65rem', letterSpacing: '0.2em',
+        color: 'rgba(204,0,0,0.4)', marginBottom: '24px',
+        textTransform: 'uppercase',
       }}>
-        {/* Alphabet rows with light bulbs above each letter */}
-        {rows.map((row, ri) => (
-          <div key={ri} style={{ display: 'flex', justifyContent: 'center', gap: '0', marginBottom: '8px' }}>
-            {row.map((letter) => {
-              const isLit = litLetters.has(letter);
-              const color = BULB_COLORS[letter] || '#cc0000';
-              return (
-                <div
-                  key={letter}
-                  style={{
-                    width: '48px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  {/* Bulb */}
-                  <div style={{
-                    width: '12px', height: '12px', borderRadius: '50%',
-                    background: isLit ? color : '#0a0000',
-                    border: '1px solid',
-                    borderColor: isLit ? color : '#1a0000',
-                    boxShadow: isLit ? `0 0 8px ${color}, 0 0 18px ${color}, 0 0 30px ${color}` : 'none',
-                    transition: isLit ? 'all 0.04s' : 'all 0.2s',
-                    position: 'relative',
-                    flexShrink: 0,
-                  }}>
-                    <div style={{
-                      position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                      width: '1px', height: '10px', background: '#1a0000',
-                    }} />
-                  </div>
+        // JOYCE'S WALL — {message}
+      </div>
 
-                  {/* Letter */}
-                  <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.9rem',
-                    letterSpacing: '0.05em',
-                    color: isLit ? color : '#1a0000',
-                    textShadow: isLit ? `0 0 12px ${color}, 0 0 24px ${color}` : 'none',
-                    transition: isLit ? 'all 0.04s' : 'all 0.3s',
-                    fontWeight: isLit ? '700' : '400',
-                    userSelect: 'none',
-                  }}>
-                    {letter}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      {/* Alphabet grid with bulbs */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap',
+        justifyContent: 'center', gap: '6px',
+        maxWidth: '520px', margin: '0 auto',
+        position: 'relative', zIndex: 2,
+      }}>
+        {letters.map((letter, i) => {
+          const isLit = litIndex === i
+          const color = letterColors[letter]
+          return (
+            <div key={letter} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+              width: '36px',
+            }}>
+              {/* Bulb */}
+              <div style={{
+                width: '12px', height: '12px', borderRadius: '50%',
+                background: isLit ? color : '#1a0000',
+                border: `1px solid ${isLit ? color : '#2a0000'}`,
+                boxShadow: isLit ? `0 0 8px ${color}, 0 0 16px ${color}, 0 0 24px ${color}` : 'none',
+                transition: 'all 0.06s ease',
+                flexShrink: 0,
+              }} />
+              {/* Letter */}
+              <div style={{
+                fontFamily: "'Bebas Neue', cursive",
+                fontSize: '1.1rem', letterSpacing: '0.05em',
+                color: isLit ? color : 'rgba(204,0,0,0.2)',
+                textShadow: isLit ? `0 0 10px ${color}, 0 0 20px ${color}` : 'none',
+                transition: 'all 0.06s ease',
+              }}>
+                {letter}
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
-        {/* Hanging wire across top */}
-        <div style={{ position: 'absolute', top: '20px', left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, #1a1a1a, transparent)' }} />
-
-        {/* Message below */}
-        <div style={{ marginTop: '28px', borderTop: '1px solid rgba(204,0,0,0.1)', paddingTop: '20px' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', letterSpacing: '0.15em', color: 'rgba(204,0,0,0.25)', marginBottom: '8px' }}>
-            {message}
-          </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: '#1a1a1a', letterSpacing: '0.12em' }}>
-            // The upside down is quiet right now
-          </div>
-        </div>
+      <div style={{
+        marginTop: '24px',
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: '0.7rem', color: '#222',
+        letterSpacing: '0.1em',
+      }}>
+        // THE UPSIDE DOWN IS QUIET
       </div>
     </div>
-  );
+  )
 }

@@ -1,140 +1,79 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react'
 
-/**
- * SignalToast
- * Drop-in global toast system with Stranger Things vocabulary.
- * Connects to Socket.io for real-time "NEW SIGNAL DETECTED" events.
- *
- * Usage: <SignalToast socket={socket} />
- *
- * Also exposes window.showSignalToast(msg, type) for manual triggers.
- * Types: 'signal' | 'infected' | 'gate' | 'success' | 'info'
- */
-
-const ICONS = {
-  signal:   '■',
-  infected: '⚠',
-  gate:     '◈',
-  success:  '✓',
-  info:     '///',
-};
-
-const COLORS = {
-  signal:   'var(--blood)',
-  infected: '#ff4400',
-  gate:     '#cc0000',
-  success:  '#00cc44',
-  info:     '#444',
-};
-
-let toastIdCounter = 0;
+const TOAST_DURATION = 4000
 
 export default function SignalToast({ socket }) {
-  const [toasts, setToasts] = useState([]);
+  const [toasts, setToasts] = useState([])
 
-  const addToast = useCallback((message, type = 'signal', duration = 4500) => {
-    const id = ++toastIdCounter;
-    setToasts(prev => [...prev.slice(-4), { id, message, type, duration }]);
+  const addToast = (message, type = 'new') => {
+    const id = Date.now() + Math.random()
+    setToasts(prev => [...prev.slice(-3), { id, message, type }])
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, duration);
-  }, []);
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, TOAST_DURATION)
+  }
 
-  // Expose globally for manual use from anywhere
   useEffect(() => {
-    window.showSignalToast = addToast;
-    return () => { delete window.showSignalToast; };
-  }, [addToast]);
-
-  // Socket.io listeners
-  useEffect(() => {
-    if (!socket) return;
+    if (!socket) return
 
     socket.on('ticket:new', (ticket) => {
-      addToast(
-        `NEW SIGNAL DETECTED — ${(ticket.title || 'UNKNOWN EVENT').toUpperCase()}`,
-        'gate',
-        5000
-      );
-    });
-
-    socket.on('ticket:sold', (ticket) => {
-      addToast(
-        `■ SIGNAL CLOSED — ${(ticket.title || 'TICKET').toUpperCase()} CLAIMED`,
-        'success',
-        4000
-      );
-    });
+      addToast(`■ NEW SIGNAL DETECTED — ${(ticket?.title || 'UNKNOWN').toUpperCase()}`, 'new')
+    })
 
     socket.on('ticket:flagged', (ticket) => {
-      addToast(
-        `⚠ INFECTED SIGNAL FLAGGED — ${(ticket.title || 'LISTING').toUpperCase()}`,
-        'infected',
-        6000
-      );
-    });
+      addToast(`⚠ INFECTED SIGNAL — ${(ticket?.title || 'UNKNOWN').toUpperCase()}`, 'infected')
+    })
+
+    socket.on('ticket:sold', (ticket) => {
+      addToast(`◈ GATE IS OPEN — SIGNAL CROSSED`, 'sold')
+    })
+
+    socket.on('connect', () => {
+      addToast('● CONNECTED TO HAWKINS NETWORK', 'system')
+    })
 
     return () => {
-      socket.off('ticket:new');
-      socket.off('ticket:sold');
-      socket.off('ticket:flagged');
-    };
-  }, [socket, addToast]);
+      socket.off('ticket:new')
+      socket.off('ticket:flagged')
+      socket.off('ticket:sold')
+      socket.off('connect')
+    }
+  }, [socket])
 
-  if (toasts.length === 0) return null;
+  const colors = {
+    new:      { border: 'rgba(204,0,0,0.6)',  text: '#cc0000',  left: '#cc0000' },
+    infected: { border: 'rgba(255,100,0,0.6)', text: '#ff6400', left: '#ff6400' },
+    sold:     { border: 'rgba(0,204,68,0.5)',  text: '#00cc44', left: '#00cc44' },
+    system:   { border: 'rgba(204,0,0,0.3)',   text: '#555',    left: 'rgba(204,0,0,0.4)' },
+  }
 
   return (
     <div style={{
-      position: 'fixed',
-      bottom: '28px',
-      right: '24px',
-      zIndex: 500,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-      maxWidth: '340px',
-      width: '100%',
+      position: 'fixed', bottom: '32px', right: '32px',
+      zIndex: 500, display: 'flex', flexDirection: 'column', gap: '10px',
+      pointerEvents: 'none',
     }}>
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          style={{
+      {toasts.map(toast => {
+        const c = colors[toast.type] || colors.new
+        return (
+          <div key={toast.id} style={{
             background: '#050000',
-            border: '1px solid rgba(204,0,0,0.35)',
-            borderLeft: `3px solid ${COLORS[toast.type] || 'var(--blood)'}`,
-            padding: '13px 16px',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.73rem',
-            letterSpacing: '0.05em',
-            color: '#ccc',
-            boxShadow: `0 0 20px rgba(204,0,0,0.12), 4px 0 0 ${COLORS[toast.type] || 'var(--blood)'}`,
+            border: `1px solid ${c.border}`,
+            borderLeft: `3px solid ${c.left}`,
+            padding: '12px 18px',
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: '0.75rem',
+            color: c.text,
+            letterSpacing: '0.06em',
+            boxShadow: `0 0 20px rgba(204,0,0,0.15)`,
+            maxWidth: '320px',
             animation: 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '10px',
-            position: 'relative',
-            overflow: 'hidden',
-            cursor: 'pointer',
-          }}
-          onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
-        >
-          {/* Progress bar */}
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0,
-            height: '2px',
-            background: COLORS[toast.type] || 'var(--blood)',
-            animation: `toastProgress ${toast.duration}ms linear forwards`,
-            opacity: 0.5,
-          }} />
-
-          <span style={{ color: COLORS[toast.type] || 'var(--blood)', flexShrink: 0, marginTop: '1px' }}>
-            {ICONS[toast.type] || '■'}
-          </span>
-          <span style={{ lineHeight: 1.5 }}>{toast.message}</span>
-
-          <style>{`@keyframes toastProgress { from{width:100%} to{width:0%} }`}</style>
-        </div>
-      ))}
+            pointerEvents: 'auto',
+          }}>
+            {toast.message}
+          </div>
+        )
+      })}
     </div>
-  );
+  )
 }

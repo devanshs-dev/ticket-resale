@@ -1,143 +1,92 @@
-import { useEffect, useState } from 'react';
-
-/**
- * DemogorgonLoader
- * Full-page loading screen with animated ASCII Demogorgon / Mind Flayer.
- * Shows while data is loading, fades out when done.
- *
- * Props:
- *   message: string — what to show below
- *   visible: bool   — control visibility
- */
+import { useEffect, useState } from 'react'
 
 const FRAMES = [
-`
-    ,     ,
-   (\\____/)
-    (_oo_)
-      (O)
-    __||__    \\)
- []/______\\[] /
- / \\______/ \\/
-/    /__\\
-(\\   /__)
-`,
-`
-     ,   ,
-    (\\__/)
-     (0 0)
-      (O)
-    __||__    \\)
- []/______\\[] /
- / \\______/ \\/
-/    /__\\
-(\\   /__)
-`,
-`
-      , ,
-     (\\/)
-    (o . o)
-      (O)
-    __||__    \\)
- []/______\\[] /
- / \\______/ \\/
-/    /__\\
-(\\   /__)
-`,
-`
-   ,     ,
-   (\\____/)
-    (-  -)
-      (O)
-    __||__    \\)
- []/______\\[] /
- / \\______/ \\/
-/    /__\\
-(\\   /__)
-`,
-];
+`    )  (    
+   (    )   
+  )  /\\  (  
+    /  \\   
+   | oo |  
+    \\  /   
+     \\/    `,
 
-const MESSAGES = [
-  'SCANNING THE UPSIDE DOWN...',
-  'CONTACTING HAWKINS LAB...',
-  'DECODING SIGNAL...',
-  'ANALYZING TRUST SCORE...',
-  'CROSS-REFERENCING AGENTS...',
-  'GATE IS OPENING...',
-];
+`   (  )    
+    )  (   
+  (  /\\  ) 
+    /  \\   
+   | -- |  
+    \\  /   
+     \\/    `,
 
-export default function DemogorgonLoader({ message, visible = true }) {
-  const [frame, setFrame] = useState(0);
-  const [msgIdx, setMsgIdx] = useState(0);
-  const [dots, setDots] = useState('');
+`    )  (   
+   (    )  
+  )  /\\  ( 
+    /  \\   
+   | ** |  
+    \\  /   
+     \\/    `,
+
+`   (  )    
+    )  (   
+  (  /\\  ) 
+    /  \\   
+   | oo |  
+    \\  /   
+     \\/    `,
+]
+
+const MOUTH_FRAMES = [
+  '   \\  /   \n    \\/    ',
+  '   (  )   \n    --    ',
+  '  (    )  \n   ----   ',
+  '   \\  /   \n    \\/    ',
+]
+
+export default function DemogorgonLoader({ visible = true, label = 'SCANNING...' }) {
+  const [frame, setFrame] = useState(0)
 
   useEffect(() => {
-    if (!visible) return;
-    const f = setInterval(() => setFrame(p => (p + 1) % FRAMES.length), 280);
-    const m = setInterval(() => setMsgIdx(p => (p + 1) % MESSAGES.length), 2200);
-    const d = setInterval(() => setDots(p => p.length >= 3 ? '' : p + '.'), 400);
-    return () => { clearInterval(f); clearInterval(m); clearInterval(d); };
-  }, [visible]);
+    if (!visible) return
+    const t = setInterval(() => setFrame(f => (f + 1) % FRAMES.length), 200)
+    return () => clearInterval(t)
+  }, [visible])
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)',
-      backdropFilter: 'blur(6px)', zIndex: 200,
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      animation: 'fadeIn 0.3s ease',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: '16px', padding: '40px',
     }}>
-      {/* Scanlines */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.04,
-        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(204,0,0,0.8) 2px, rgba(204,0,0,0.8) 4px)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* ASCII art */}
       <pre style={{
-        fontFamily: 'var(--font-retro)',
-        fontSize: '1.2rem',
-        color: 'var(--blood)',
-        textShadow: '0 0 10px rgba(204,0,0,0.6), 0 0 20px rgba(204,0,0,0.3)',
-        lineHeight: 1.4,
-        marginBottom: '32px',
-        userSelect: 'none',
+        fontFamily: "'VT323', monospace",
+        fontSize: '1.1rem',
+        color: '#cc0000',
+        textShadow: '0 0 10px rgba(204,0,0,0.6)',
+        lineHeight: '1.4',
+        textAlign: 'center',
         letterSpacing: '0.05em',
+        animation: 'redGlow 2s ease-in-out infinite alternate',
+        userSelect: 'none',
+        margin: 0,
       }}>
-        {FRAMES[frame]}
+        {`    _____    
+   /     \\   
+  | (o)(o)|  
+  |   __  |  
+   \\ (  ) /  
+    |DMMG|   
+${MOUTH_FRAMES[frame]}`}
       </pre>
-
-      {/* Message */}
       <div style={{
-        fontFamily: 'var(--font-mono)', fontSize: '0.85rem',
-        color: 'rgba(204,0,0,0.7)', letterSpacing: '0.15em',
-        textTransform: 'uppercase', marginBottom: '8px',
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: '0.7rem',
+        color: 'rgba(204,0,0,0.5)',
+        letterSpacing: '0.2em',
+        textTransform: 'uppercase',
+        animation: 'blink 1.2s infinite',
       }}>
-        {message || MESSAGES[msgIdx]}{dots}
+        {label}
       </div>
-
-      {/* Signal bars (animated) */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', marginTop: '16px' }}>
-        {[1,2,3,4,5].map(i => (
-          <div key={i} style={{
-            width: '4px',
-            height: `${i * 6}px`,
-            background: 'var(--blood)',
-            opacity: 0.3 + i * 0.14,
-            animation: `barPulse ${0.5 + i * 0.12}s ease-in-out infinite alternate`,
-          }} />
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes barPulse {
-          from { opacity: 0.15; transform: scaleY(0.6); }
-          to   { opacity: 0.8;  transform: scaleY(1); }
-        }
-      `}</style>
     </div>
-  );
+  )
 }

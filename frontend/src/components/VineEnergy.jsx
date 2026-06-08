@@ -1,157 +1,87 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'
 
-/**
- * VineEnergy
- * Full-page canvas overlay that draws red Mind Flayer tendrils
- * flowing toward the mouse cursor — simulating energy/life being
- * "sucked" through the Upside Down vines.
- *
- * Props:
- *   intensity: 0-1 (default 1)  — controls particle density
- *   active: bool (default true) — can be toggled off
- */
-export default function VineEnergy({ intensity = 1, active = true }) {
-  const canvasRef = useRef(null);
-  const mouseRef = useRef({ x: -999, y: -999 });
-  const activeRef = useRef(active);
-
-  useEffect(() => { activeRef.current = active; }, [active]);
+export default function VineEnergy() {
+  const canvasRef = useRef(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animId;
-    let particles = [];
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    let animId
+    let mouse = { x: -999, y: -999 }
+    let particles = []
 
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
-    resize();
-    window.addEventListener('resize', resize);
 
-    const onMove = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-    const onTouch = (e) => {
-      const t = e.touches[0];
-      if (t) mouseRef.current = { x: t.clientX, y: t.clientY };
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onTouch, { passive: true });
-
-    function spawnParticle() {
-      if (!activeRef.current) return;
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
-      if (mx < 0) return;
-
-      const count = Math.ceil(intensity * 3);
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 100 + Math.random() * 220;
-        // Each particle is a vine "tendril" moving toward mouse
+    function onMouseMove(e) {
+      mouse.x = e.clientX
+      mouse.y = e.clientY
+      // Spawn a few vine particles on move
+      for (let i = 0; i < 3; i++) {
         particles.push({
-          x: mx + Math.cos(angle) * dist,
-          y: my + Math.sin(angle) * dist,
-          tx: mx,
-          ty: my,
-          life: 35 + Math.random() * 35,
-          maxLife: 70,
-          segs: [],          // trail segments
-          speed: 1.8 + Math.random() * 1.8,
-          thickness: 0.4 + Math.random() * 1.2,
-          wobble: (Math.random() - 0.5) * 1.5,
-          phase: Math.random() * Math.PI * 2,
-          // Red channel varies slightly for organic look
-          r: 130 + Math.floor(Math.random() * 80),
-        });
+          x: mouse.x + (Math.random() - 0.5) * 10,
+          y: mouse.y + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 2.5,
+          vy: (Math.random() - 0.5) * 2.5 - 0.5,
+          life: 1,
+          decay: 0.025 + Math.random() * 0.03,
+          width: 1 + Math.random() * 2.5,
+          length: 12 + Math.random() * 20,
+          angle: Math.random() * Math.PI * 2,
+        })
       }
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Spawn new vines
-      if (Math.random() > 0.45) spawnParticle();
-
-      // Kill dead
-      particles = particles.filter(p => p.life > 0);
-
-      // Max particles cap
-      if (particles.length > 260) particles.splice(0, particles.length - 260);
+      particles = particles.filter(p => p.life > 0)
 
       particles.forEach(p => {
-        p.life--;
-        p.phase += 0.08;
+        ctx.save()
+        ctx.globalAlpha = p.life * 0.65
+        ctx.strokeStyle = `rgba(204,0,0,${p.life.toFixed(2)})`
+        ctx.lineWidth = p.width * p.life
+        ctx.shadowColor = '#cc0000'
+        ctx.shadowBlur = 6 * p.life
+        ctx.beginPath()
+        ctx.moveTo(p.x, p.y)
+        // Vine-like curved tendril
+        const ex = p.x + Math.cos(p.angle) * p.length * p.life
+        const ey = p.y + Math.sin(p.angle) * p.length * p.life
+        const cpx = p.x + Math.cos(p.angle + 0.8) * p.length * 0.5
+        const cpy = p.y + Math.sin(p.angle + 0.8) * p.length * 0.5
+        ctx.quadraticCurveTo(cpx, cpy, ex, ey)
+        ctx.stroke()
+        ctx.restore()
 
-        // Move toward target with wobble
-        const dx = p.tx - p.x;
-        const dy = p.ty - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 4) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          // Perpendicular wobble
-          p.x += nx * p.speed + ny * Math.sin(p.phase) * p.wobble;
-          p.y += ny * p.speed - nx * Math.sin(p.phase) * p.wobble;
-        }
+        p.x += p.vx
+        p.y += p.vy
+        p.life -= p.decay
+        p.angle += 0.05
+      })
 
-        // Trail
-        p.segs.push({ x: p.x, y: p.y });
-        if (p.segs.length > 14) p.segs.shift();
-
-        if (p.segs.length < 2) return;
-
-        const alpha = (p.life / p.maxLife);
-        ctx.beginPath();
-        ctx.moveTo(p.segs[0].x, p.segs[0].y);
-        for (let i = 1; i < p.segs.length; i++) {
-          // Smooth with midpoints
-          const mx = (p.segs[i - 1].x + p.segs[i].x) / 2;
-          const my = (p.segs[i - 1].y + p.segs[i].y) / 2;
-          ctx.quadraticCurveTo(p.segs[i - 1].x, p.segs[i - 1].y, mx, my);
-        }
-        ctx.strokeStyle = `rgba(${p.r}, 0, 0, ${(alpha * 0.75).toFixed(3)})`;
-        ctx.lineWidth = p.thickness * alpha;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-
-        // Glow tip
-        if (p.segs.length > 3) {
-          const tip = p.segs[p.segs.length - 1];
-          ctx.beginPath();
-          ctx.arc(tip.x, tip.y, p.thickness * 1.4, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${p.r}, 0, 0, ${(alpha * 0.55).toFixed(3)})`;
-          ctx.fill();
-        }
-      });
-
-      animId = requestAnimationFrame(draw);
+      animId = requestAnimationFrame(draw)
     }
-    draw();
+
+    resize()
+    draw()
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('resize', resize)
 
     return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('touchmove', onTouch);
-    };
-  }, [intensity]);
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(animId)
+    }
+  }, [])
 
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 3,
-        pointerEvents: 'none',
-        width: '100%',
-        height: '100%',
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none' }}
     />
-  );
+  )
 }
