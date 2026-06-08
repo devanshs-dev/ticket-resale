@@ -1,180 +1,221 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import API from '../api'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../api';
 
-function Admin() {
-  const navigate = useNavigate()
-  const user = JSON.parse(localStorage.getItem('user'))
-  const [stats, setStats] = useState(null)
-  const [users, setUsers] = useState([])
-  const [flagged, setFlagged] = useState([])
-  const [tab, setTab] = useState('stats')
+const TABS = ['OVERVIEW', 'AGENTS', 'SIGNALS', 'INFECTED'];
+
+export default function Admin() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [tab, setTab] = useState('OVERVIEW');
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [flagged, setFlagged] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { navigate('/'); return }
-    fetchAll()
-  }, []) // eslint-disable-line
+    if (user.role !== 'admin') { navigate('/'); return; }
+    Promise.all([
+      api.get('/admin/stats').catch(() => ({ data: {} })),
+      api.get('/admin/users').catch(() => ({ data: [] })),
+      api.get('/admin/tickets').catch(() => ({ data: [] })),
+      api.get('/admin/flagged').catch(() => ({ data: [] })),
+    ]).then(([s, u, t, f]) => {
+      setStats(s.data);
+      setUsers(u.data?.users || u.data || []);
+      setTickets(t.data?.tickets || t.data || []);
+      setFlagged(f.data?.tickets || f.data || []);
+    }).finally(() => setLoading(false));
+  }, []);
 
-  const fetchAll = async () => {
-    try {
-      const [statsRes, usersRes, flaggedRes] = await Promise.all([
-        API.get('/admin/stats'),
-        API.get('/admin/users'),
-        API.get('/admin/flagged'),
-      ])
-      setStats(statsRes.data)
-      setUsers(usersRes.data)
-      setFlagged(flaggedRes.data)
-    } catch (err) { console.error(err) }
-  }
-
-  const handleApprove = async (id) => { await API.put('/admin/tickets/' + id + '/approve'); fetchAll() }
-  const handleDeleteTicket = async (id) => { await API.delete('/admin/tickets/' + id); fetchAll() }
-  const handleBanUser = async (id) => { await API.delete('/admin/users/' + id); fetchAll() }
-
-  const statCards = stats ? [
-    { label: 'Total Users', value: stats.totalUsers, color: '#7c3aed', icon: '👥' },
-    { label: 'Total Tickets', value: stats.totalTickets, color: '#06b6d4', icon: '🎫' },
-    { label: 'Available', value: stats.availableTickets, color: '#10b981', icon: '✅' },
-    { label: 'Sold', value: stats.soldTickets, color: '#a855f7', icon: '💸' },
-    { label: 'Flagged', value: stats.flaggedTickets, color: '#f87171', icon: '🚩' },
-  ] : []
-
-  const surface = { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '16px' }
+  const statItems = stats ? [
+    { label: 'TOTAL AGENTS', value: stats.totalUsers || users.length },
+    { label: 'ACTIVE SIGNALS', value: stats.activeTickets || tickets.length },
+    { label: 'INFECTED SIGNALS', value: stats.flaggedTickets || flagged.length, danger: true },
+    { label: 'TOTAL ORDERS', value: stats.totalOrders || 0 },
+    { label: 'REVENUE (₹)', value: (stats.totalRevenue || 0).toLocaleString('en-IN') },
+    { label: 'AVG TRUST SCORE', value: stats.avgTrustScore ? Math.round(stats.avgTrustScore) : '—' },
+  ] : [];
 
   return (
-    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', padding: '40px 32px' }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+    <div className="page-root">
+      <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(26,0,0,0.3), #000 60%)', zIndex: 0, pointerEvents: 'none' }} />
 
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '2rem', marginBottom: '6px' }}>Admin Panel</h1>
-          <p style={{ color: 'var(--color-muted)' }}>Manage users, tickets and flagged listings</p>
+      <div className="container" style={{ paddingTop: '48px', paddingBottom: '80px', position: 'relative', zIndex: 5 }}>
+        {/* Header */}
+        <div style={{ marginBottom: '40px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div className="signal-badge" style={{ marginBottom: '12px' }}>
+              <div className="signal-dot" />
+              HAWKINS LABORATORY — CLASSIFIED
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '3.5rem', letterSpacing: '0.1em', color: '#fff', lineHeight: 1, textShadow: '0 0 30px rgba(204,0,0,0.2)' }}>
+              ADMIN <span style={{ color: 'var(--blood)', textShadow: '0 0 20px #cc0000' }}>CONTROL</span>
+            </h1>
+            <p style={{ color: '#333', fontSize: '0.7rem', letterSpacing: '0.12em', fontFamily: 'var(--font-mono)', marginTop: '8px' }}>
+              // DR. {(user.name || 'BRENNER').toUpperCase()} — CLEARANCE: LEVEL 5
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ border: '1px solid rgba(204,0,0,0.2)', padding: '10px 16px', background: 'rgba(0,0,0,0.5)' }}>
+              <div style={{ color: '#333', fontSize: '0.6rem', letterSpacing: '0.15em', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>SYSTEM</div>
+              <div style={{ color: '#00cc44', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em' }}>● ALL SYSTEMS ONLINE</div>
+            </div>
+          </div>
         </div>
 
-        {/* Stat cards */}
-        {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px', marginBottom: '32px' }}>
-            {statCards.map((s) => (
-              <div key={s.label} style={{ ...surface, padding: '20px', textAlign: 'center' }}>
-                <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>{s.icon}</span>
-                <p style={{ color: 'var(--color-muted)', fontSize: '0.75rem', marginBottom: '6px' }}>{s.label}</p>
-                <p style={{ color: s.color, fontWeight: 800, fontSize: '1.6rem' }}>{s.value}</p>
+        {/* Stat grid */}
+        {!loading && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '14px', marginBottom: '48px' }}>
+            {statItems.map((s, i) => (
+              <div key={i} className="stat-card" style={s.danger ? { borderColor: 'rgba(204,0,0,0.3)', boxShadow: '0 0 20px rgba(204,0,0,0.07)' } : {}}>
+                <div className="stat-value" style={s.danger ? { color: 'var(--blood)', textShadow: '0 0 20px rgba(204,0,0,0.4)' } : {}}>{s.value}</div>
+                <div className="stat-label">{s.label}</div>
               </div>
             ))}
           </div>
         )}
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-          {['stats', 'users', 'flagged'].map((t) => (
+        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(204,0,0,0.13)', marginBottom: '32px' }}>
+          {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              padding: '10px 22px', borderRadius: '10px', fontWeight: 600,
-              fontSize: '0.9rem', cursor: 'pointer', textTransform: 'capitalize',
-              border: 'none', transition: 'all 0.2s',
-              background: tab === t ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : 'var(--color-surface)',
-              color: tab === t ? '#fff' : 'var(--color-muted)',
-              outline: tab !== t ? '1px solid var(--color-border)' : 'none',
+              padding: '12px 24px', background: 'none', border: 'none',
+              borderBottom: tab === t ? '2px solid var(--blood)' : '2px solid transparent',
+              color: tab === t ? 'var(--blood)' : '#333',
+              fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.12em',
+              textTransform: 'uppercase', cursor: 'pointer', transition: 'all .2s', marginBottom: '-1px',
             }}>
-              {t}
+              {t}{t === 'INFECTED' && flagged.length > 0 ? ` (${flagged.length})` : ''}
             </button>
           ))}
         </div>
 
-        {/* Stats tab */}
-        {tab === 'stats' && (
-          <div style={{ ...surface, padding: '32px' }}>
-            <h3 style={{ color: '#fff', fontWeight: 700, marginBottom: '12px' }}>Platform Overview</h3>
-            <p style={{ color: 'var(--color-muted)', lineHeight: 1.7 }}>
-              Total of <strong style={{ color: 'var(--color-text)' }}>{stats?.totalUsers}</strong> users have listed{' '}
-              <strong style={{ color: 'var(--color-text)' }}>{stats?.totalTickets}</strong> tickets on the platform.{' '}
-              <strong style={{ color: '#34d399' }}>{stats?.soldTickets}</strong> tickets have been sold successfully.{' '}
-              <strong style={{ color: '#f87171' }}>{stats?.flaggedTickets}</strong> tickets are currently flagged for review.
-            </p>
+        {loading ? (
+          <div style={{ padding: '80px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div className="st-spinner" />
+            <span style={{ color: '#333', fontSize: '0.7rem', letterSpacing: '0.15em', fontFamily: 'var(--font-mono)' }}>SCANNING HAWKINS LAB DATABASE...</span>
           </div>
-        )}
-
-        {/* Users tab */}
-        {tab === 'users' && (
-          <div style={{ ...surface, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  {['Name', 'Email', 'Role', 'Action'].map((h) => (
-                    <th key={h} style={{ padding: '16px 20px', textAlign: 'left', color: 'var(--color-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{h}</th>
+        ) : (
+          <>
+            {/* OVERVIEW */}
+            {tab === 'OVERVIEW' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="chart-card">
+                  <div className="chart-title">// SIGNAL FEED (RECENT)</div>
+                  {tickets.slice(0,5).map((t, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(204,0,0,0.08)' }}>
+                      <span style={{ color: '#888', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>{t.title || 'Event'}</span>
+                      <span style={{ color: 'rgba(204,0,0,0.6)', fontSize: '0.68rem', fontFamily: 'var(--font-mono)' }}>₹{Number(t.price||0).toLocaleString('en-IN')}</span>
+                    </div>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u._id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: '16px 20px', color: 'var(--color-text)', fontWeight: 600 }}>{u.name}</td>
-                    <td style={{ padding: '16px 20px', color: 'var(--color-muted)', fontSize: '0.9rem' }}>{u.email}</td>
-                    <td style={{ padding: '16px 20px' }}>
-                      <span style={{
-                        background: u.role === 'admin' ? 'rgba(248,113,113,0.1)' : 'rgba(124,58,237,0.1)',
-                        border: `1px solid ${u.role === 'admin' ? 'rgba(248,113,113,0.3)' : 'rgba(124,58,237,0.3)'}`,
-                        color: u.role === 'admin' ? '#f87171' : '#a855f7',
-                        padding: '2px 10px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-                      }}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px 20px' }}>
-                      <button onClick={() => handleBanUser(u._id)} style={{
-                        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                        color: '#f87171', padding: '6px 14px', borderRadius: '8px',
-                        cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
-                      }}>
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  {tickets.length === 0 && <div style={{ color: '#222', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>NO SIGNALS DETECTED</div>}
+                </div>
+                <div className="chart-card">
+                  <div className="chart-title">// RECENT AGENTS</div>
+                  {users.slice(0,5).map((u, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(204,0,0,0.08)' }}>
+                      <div>
+                        <div style={{ color: '#888', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>{u.name || 'Agent'}</div>
+                        <div style={{ color: '#333', fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>{u.email}</div>
+                      </div>
+                      <span className={`badge ${u.role === 'admin' ? 'badge-red' : 'badge-gray'}`}>{(u.role||'user').toUpperCase()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Flagged tab */}
-        {tab === 'flagged' && (
-          <div>
-            {flagged.length === 0 ? (
-              <div style={{ ...surface, padding: '60px', textAlign: 'center' }}>
-                <p style={{ fontSize: '2rem', marginBottom: '12px' }}>✅</p>
-                <p style={{ color: 'var(--color-muted)' }}>No flagged tickets — all clear!</p>
+            {/* AGENTS (users) */}
+            {tab === 'AGENTS' && (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="st-table">
+                  <thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>JOINED</th><th>LISTINGS</th></tr></thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u._id || u.id}>
+                        <td>{u.name || '—'}</td>
+                        <td style={{ color: '#555' }}>{u.email}</td>
+                        <td><span className={`badge ${u.role === 'admin' ? 'badge-red' : 'badge-gray'}`}>{(u.role||'USER').toUpperCase()}</span></td>
+                        <td style={{ color: '#333' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                        <td style={{ color: 'rgba(204,0,0,0.6)', fontFamily: 'var(--font-mono)' }}>{u.ticketCount || 0}</td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#222', padding: '40px' }}>NO AGENTS REGISTERED</td></tr>}
+                  </tbody>
+                </table>
               </div>
-            ) : flagged.map((t) => (
-              <div key={t._id} style={{ ...surface, padding: '20px 24px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ color: 'var(--color-text)', fontWeight: 700, marginBottom: '4px' }}>{t.title}</h3>
-                  <p style={{ color: 'var(--color-muted)', fontSize: '0.8rem' }}>
-                    Seller: {t.seller?.name} · Trust Score:{' '}
-                    <span style={{ color: '#f87171', fontWeight: 600 }}>{t.trustScore}</span>
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => handleApprove(t._id)} style={{
-                    background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
-                    color: '#34d399', padding: '8px 18px', borderRadius: '8px',
-                    cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
-                  }}>
-                    Approve
-                  </button>
-                  <button onClick={() => handleDeleteTicket(t._id)} style={{
-                    background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                    color: '#f87171', padding: '8px 18px', borderRadius: '8px',
-                    cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
-                  }}>
-                    Delete
-                  </button>
-                </div>
+            )}
+
+            {/* SIGNALS (all tickets) */}
+            {tab === 'SIGNALS' && (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="st-table">
+                  <thead><tr><th>SIGNAL</th><th>CATEGORY</th><th>PRICE</th><th>TRUST</th><th>STATUS</th><th>TRANSMITTER</th></tr></thead>
+                  <tbody>
+                    {tickets.map(t => (
+                      <tr key={t._id || t.id}>
+                        <td style={{ maxWidth: '200px' }}>{t.title || '—'}</td>
+                        <td><span className="badge badge-gray">{(t.category||'').toUpperCase()}</span></td>
+                        <td style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>₹{Number(t.price||0).toLocaleString('en-IN')}</td>
+                        <td>
+                          <span style={{ color: (t.trustScore||0)>=80 ? '#00cc44' : (t.trustScore||0)>=60 ? '#ffaa00' : '#cc0000', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                            {t.trustScore||'—'}/100
+                          </span>
+                        </td>
+                        <td><span className={`badge ${t.status==='sold'?'badge-red':t.status==='flagged'?'badge-yellow':'badge-green'}`}>{(t.status||'ACTIVE').toUpperCase()}</span></td>
+                        <td style={{ color: '#333' }}>{t.seller?.name || t.sellerName || '—'}</td>
+                      </tr>
+                    ))}
+                    {tickets.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#222', padding: '40px' }}>NO SIGNALS DETECTED</td></tr>}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* INFECTED (flagged) */}
+            {tab === 'INFECTED' && (
+              flagged.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-title" style={{ color: '#00cc44' }}>NO INFECTED SIGNALS</div>
+                  <div className="empty-state-sub">Hawkins is clean. For now.</div>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  {/* Warning banner */}
+                  <div style={{ border: '1px solid rgba(204,0,0,0.4)', background: 'rgba(204,0,0,0.06)', padding: '14px 18px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--blood)', fontSize: '1.2rem' }}>⚠</span>
+                    <span style={{ color: 'var(--blood)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
+                      {flagged.length} INFECTED SIGNAL{flagged.length !== 1 ? 'S' : ''} DETECTED — REVIEW AND QUARANTINE
+                    </span>
+                  </div>
+                  <table className="st-table">
+                    <thead><tr><th>SIGNAL</th><th>TRUST SCORE</th><th>PRICE</th><th>TRANSMITTER</th><th>ACTIONS</th></tr></thead>
+                    <tbody>
+                      {flagged.map(t => (
+                        <tr key={t._id || t.id} style={{ background: 'rgba(204,0,0,0.03)' }}>
+                          <td>{t.title || '—'}</td>
+                          <td><span style={{ color: 'var(--blood)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textShadow: '0 0 10px rgba(204,0,0,0.4)' }}>■ {t.trustScore||0}/100 — INFECTED</span></td>
+                          <td style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>₹{Number(t.price||0).toLocaleString('en-IN')}</td>
+                          <td style={{ color: '#444' }}>{t.seller?.name || t.sellerName || '—'}</td>
+                          <td style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn-ghost" style={{ padding: '4px 12px', fontSize: '0.6rem', borderColor: 'rgba(204,0,0,0.6)', color: 'var(--blood)' }}
+                              onClick={() => api.delete(`/admin/tickets/${t._id||t.id}`).then(() => setFlagged(f => f.filter(x => x._id !== t._id)))}
+                            >
+                              QUARANTINE
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+          </>
         )}
       </div>
     </div>
-  )
+  );
 }
-
-export default Admin
