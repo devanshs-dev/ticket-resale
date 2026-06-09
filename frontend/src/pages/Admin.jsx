@@ -152,7 +152,7 @@ export default function Admin() {
             {tab === 'SIGNALS' && (
               <div style={{ overflowX: 'auto' }}>
                 <table className="st-table">
-                  <thead><tr><th>SIGNAL</th><th>CATEGORY</th><th>PRICE</th><th>TRUST</th><th>STATUS</th><th>TRANSMITTER</th></tr></thead>
+                  <thead><tr><th>SIGNAL</th><th>CATEGORY</th><th>PRICE</th><th>TRUST</th><th>STATUS</th><th>TRANSMITTER</th><th>ACTIONS</th></tr></thead>
                   <tbody>
                     {tickets.map(t => (
                       <tr key={t._id || t.id}>
@@ -166,6 +166,17 @@ export default function Admin() {
                         </td>
                         <td><span className={`badge ${t.status==='sold'?'badge-red':t.status==='flagged'?'badge-yellow':'badge-green'}`}>{(t.status||'ACTIVE').toUpperCase()}</span></td>
                         <td style={{ color: '#333' }}>{t.seller?.name || t.sellerName || '—'}</td>
+<td style={{ display:'flex', gap:'8px' }}>
+  <button className="btn-ghost" style={{ padding:'4px 12px', fontSize:'0.6rem', borderColor:'rgba(204,0,0,0.6)', color:'var(--blood)' }}
+    onClick={() => {
+      if(window.confirm('Delete this signal?')) {
+        api.delete(`/admin/tickets/${t._id||t.id}`)
+          .then(() => setTickets(prev => prev.filter(x => (x._id||x.id) !== (t._id||t.id))))
+          .catch(() => alert('Failed to delete'))
+      }
+    }}
+  >DELETE</button>
+</td>
                       </tr>
                     ))}
                     {tickets.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#222', padding: '40px' }}>NO SIGNALS DETECTED</td></tr>}
