@@ -14,6 +14,8 @@ import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import VineEnergy from './components/VineEnergy'
 import SignalToast from './components/SignalToast'
+import NotFound from './pages/NotFound'
+
 
 function AppContent() {
   const [user, setUser] = useState(() => {
@@ -46,6 +48,7 @@ function AppContent() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </>
