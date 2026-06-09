@@ -16,10 +16,13 @@ connectDB()
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
-  cors: { origin: 'http://localhost:3000', methods: ['GET', 'POST'] }
+  cors: { origin: ['http://localhost:3000', 'http://localhost:3004', 'https://ticket-resale-phi.vercel.app'], methods: ['GET', 'POST'] }
 })
 
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3004', 'https://ticket-resale-phi.vercel.app'],
+  credentials: true
+}))
 app.use(express.json())
 app.use('/api/admin', adminRoutes)
 

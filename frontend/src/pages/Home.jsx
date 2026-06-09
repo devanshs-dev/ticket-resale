@@ -343,7 +343,6 @@ export default function Home() {
         </section>
 
         <div className="divider-h" />
-        <JoyceWall />
 
         {/* ── LISTINGS ────────────────────────────────── */}
         <section style={{ position: 'relative', zIndex: 5, padding: '60px 0' }}>
