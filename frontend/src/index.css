@@ -414,3 +414,9 @@ img { display: block; max-width: 100%; }
 @media (max-width: 480px) {
   .ticket-grid { grid-template-columns: 1fr; }
 }
+@media (max-width: 768px) {
+  nav { padding: 12px 16px !important; }
+  nav div:nth-child(2) { display: none !important; }
+  .hero-flex-row { flex-direction: column !important; }
+  .floating-card-hero { display: none !important; }
+}

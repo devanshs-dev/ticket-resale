@@ -104,11 +104,10 @@ export default function Login({ onLogin }) {
           </p>
 
           {/* Seeded creds hint */}
-          <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(204,0,0,0.04)', border: '1px solid rgba(204,0,0,0.1)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: '#333', letterSpacing: '0.05em' }}>
-            // TEST: rahul@test.com / priya@test.com — password: password123
+          
           </div>
         </div>
       </div>
-    </div>
+    
   );
 }

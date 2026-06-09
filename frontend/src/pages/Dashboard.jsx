@@ -2,14 +2,26 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import API from '../api'
 import WillsWall from '../components/WillsWall'
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user'))
+  const navigate = useNavigate()
+useEffect(() => {
+  if (!user) navigate('/login')
+}, [])
   const [orders, setOrders] = useState([])
   const [sales, setSales] = useState([])
   const [tab, setTab] = useState('orders')
   const mono = "'Share Tech Mono', monospace"
   const display = "'Bebas Neue', cursive"
+
+
+useEffect(() => {
+  if (!user || !user._id) {
+    navigate('/login')
+  }
+}, [])
 
   useEffect(() => {
     Promise.all([API.get('/orders/my-orders'), API.get('/orders/my-sales')])

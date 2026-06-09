@@ -149,6 +149,77 @@ function TVFlicker() {
 // ── CATEGORIES ────────────────────────────────────────────
 const CATEGORIES = ['ALL', 'CONCERTS', 'TRAVEL', 'SPORTS', 'MOVIES', 'THEATRE', 'SUBSCRIPTIONS', 'RESERVATIONS'];
 
+function JoyceWall() {
+  const message = "HELP ME";
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const [lit, setLit] = useState(-1);
+  const [phase, setPhase] = useState(0);
+  const msgRef = useRef(0);
+
+  useEffect(() => {
+    let timer;
+    function animate() {
+      if (phase === 0) {
+        setLit(Math.floor(Math.random() * 26));
+        timer = setTimeout(animate, 120 + Math.random() * 180);
+      } else {
+        const idx = msgRef.current;
+        const char = message[idx];
+        const li = alphabet.indexOf(char);
+        setLit(li);
+        msgRef.current = (idx + 1) % message.length;
+        timer = setTimeout(animate, 500);
+      }
+    }
+    const phaseSwitch = setTimeout(() => setPhase(1), 3000);
+    animate();
+    return () => { clearTimeout(timer); clearTimeout(phaseSwitch); };
+  }, [phase]);
+
+  const colors = ['#ff0000','#ff4400','#ffaa00','#ff6600','#00ff00','#0044ff','#ff00ff','#ffffff','#ff2200','#ffcc00','#ff0066','#cc4400','#ff8800','#00ffff','#ff4488','#ffff00','#ff0044','#44ff00','#0088ff','#ff8844','#88ff00','#ff0088','#00ff88','#8800ff','#ff4400','#00ff44'];
+
+  return (
+    <div style={{ padding: '48px 0', borderTop: '1px solid rgba(204,0,0,0.13)', background: 'rgba(0,0,0,0.6)' }}>
+      <div className="container">
+        <div className="section-header" style={{ marginBottom: '32px' }}>
+          <div className="section-line" />
+          <div className="section-title">// JOYCE'S WALL</div>
+          <div className="section-line reverse" />
+        </div>
+
+        <div style={{ background: '#0a0000', border: '1px solid rgba(204,0,0,0.2)', padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div className="static-noise" style={{ opacity: 0.04 }} />
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+            {alphabet.split('').map((letter, i) => {
+              const isLit = lit === i;
+              return (
+                <div key={i} style={{
+                  width: '42px', height: '42px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-display)', fontSize: '1.3rem',
+                  color: isLit ? colors[i] : 'rgba(204,0,0,0.12)',
+                  textShadow: isLit ? `0 0 10px ${colors[i]}, 0 0 20px ${colors[i]}, 0 0 40px ${colors[i]}` : 'none',
+                  transition: 'all 0.08s ease',
+                  border: '1px solid',
+                  borderColor: isLit ? colors[i] + '44' : 'rgba(204,0,0,0.08)',
+                  background: isLit ? colors[i] + '11' : 'transparent',
+                }}>
+                  {letter}
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '20px', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(204,0,0,0.3)', letterSpacing: '0.15em', position: 'relative', zIndex: 2 }}>
+            // SIGNALS FROM THE OTHER SIDE
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN HOME ─────────────────────────────────────────────
 export default function Home() {
   const navigate = useNavigate();
@@ -266,12 +337,13 @@ export default function Home() {
           </form>
 
           {/* Christmas lights */}
-          <div style={{ position: 'relative', zIndex: 2 }}>
+          <div className="hero-flex-row" style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '60px', width: '100%', maxWidth: '1000px' }}>
             <ChristmasLights />
           </div>
         </section>
 
         <div className="divider-h" />
+        <JoyceWall />
 
         {/* ── LISTINGS ────────────────────────────────── */}
         <section style={{ position: 'relative', zIndex: 5, padding: '60px 0' }}>
