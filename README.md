@@ -27,11 +27,5 @@ A full-stack ticket resale marketplace with ML fraud detection, real-time availa
 - Analytics dashboard (PostgreSQL)
 - Admin panel
 
-## Test Users (password: password123)
-- rahul@test.com (admin)
-- priya@test.com
-- amit@test.com
-- sneha@test.com
-
 ## Author
 Devansh Singh — MUJ 2026
